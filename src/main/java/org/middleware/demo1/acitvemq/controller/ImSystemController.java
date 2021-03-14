@@ -61,7 +61,7 @@ public class ImSystemController {
         if(userId==3L){
             friendList.setUserId(user3.getId()).setFriends(friendList3).setUsername(user3.getName());
         }
-        return new Response<>().setCode(0).setMsg("success").setData(friendList);
+        return new Response<>().setCode(0).setMsg("Ok").setData(friendList);
     }
 
 
@@ -102,7 +102,7 @@ public class ImSystemController {
         }
 
         //true or false
-        return result;
+        return new Response<>().setCode(0).setMsg("OK").setData(result);
     }
 
 
