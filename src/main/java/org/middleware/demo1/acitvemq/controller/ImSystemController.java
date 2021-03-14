@@ -1,12 +1,20 @@
 package org.middleware.demo1.acitvemq.controller;
 
 import org.middleware.demo1.acitvemq.config.Response;
+import org.middleware.demo1.acitvemq.config.content.Content;
+import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.entity.vo.FriendListRetVo;
 import org.middleware.demo1.acitvemq.service.ImSystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.jms.JMSException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.middleware.demo1.acitvemq.config.content.Content.*;
 
@@ -60,24 +68,41 @@ public class ImSystemController {
 
     /**
      *
-     * @param
-     * @return
+     * @param senderId 发送者ID
+     * @param userId 被选择者ID
+     * @return [聊天记录]
      */
     @GetMapping("/user")
-    public Object userInfo(@RequestParam String userName){
+    public Object userInfo(@RequestParam Long senderId, @RequestParam Long userId){
+        List<Msg> chatLog = new ArrayList<>();
 
-        return null;
+        if(senderId.equals(1L) && userId.equals(2L)){
+            chatLog.add(Content.msg3);
+            chatLog.add(Content.msg4);
+        }
+
+        return new Response<>().setCode(0).setMsg("OK").setData(chatLog);
     }
 
     @GetMapping("/send")
     public Object send(@RequestParam String msg,
-                       @RequestParam String sender,
-                       @RequestParam(required = false) String receiver,
+                       @RequestParam Long senderId,
+                       @RequestParam(required = false) Long receiverId,
                        @RequestParam Integer type,
                        @RequestParam(required = false) String fileName,
-                       @RequestParam(required = false) String groupName){
+                       @RequestParam(required = false) Long groupId) throws JMSException {
+        boolean result = false;
+
+        if(receiverId != null) {
+            result = service.sendToSomebody(msg, senderId, receiverId, type, fileName);
+        }
+
+        else if(groupId != null) {
+            result = service.sendToGroup(msg, senderId, groupId, type, fileName);
+        }
+
         //true or false
-        return null;
+        return result;
     }
 
 
@@ -89,7 +114,11 @@ public class ImSystemController {
      * @return
      */
     @PostMapping("/fileSave")
-    public Object fileSave(@RequestParam File file){
+    public Object fileSave(HttpServletRequest request,
+                           @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+        byte[] bytes = file.getBytes();
+        //todo 上传文件至文件服务器（进度条？）
+
         //true of false
         return null;
     }

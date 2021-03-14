@@ -38,4 +38,9 @@ public class Msg {
      */
     private Long senderId;
 
+    /**
+     * 接收者
+     */
+    private Long receiverId;
+
 }

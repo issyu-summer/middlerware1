@@ -109,6 +109,22 @@ public class Content {
             = new Msg()
             .setId(1L).setContent("can you speak English ？").setOrder(1)
             .setType(Type.TEXT).setSenderId(1L);
+
+    /**
+     * 模拟消息3,用户1发送给用户2（msg:你好）****中文测试****
+     */
+    public static Msg msg3
+            = new Msg()
+            .setId(3L).setContent("你好").setOrder(1)
+            .setType(Type.TEXT).setSenderId(1L).setReceiverId(2L);
+
+    /**
+     * 模拟消息4,用户1发送给用户2（msg:hello!）****英文测试****
+     */
+    public static Msg msg4
+            = new Msg()
+            .setId(4L).setContent("hello!").setOrder(2)
+            .setType(Type.TEXT).setSenderId(1L).setReceiverId(2L);
     /* ***********************************以上将模拟n个消息、请在使用的时候自行添加*********************************** */
 
 
