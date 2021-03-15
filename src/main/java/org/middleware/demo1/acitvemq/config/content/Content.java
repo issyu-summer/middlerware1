@@ -139,6 +139,11 @@ public class Content {
      * 群2的模拟消息记录,请自行添加
      */
     public static List<Msg> groupMsg2;
+
+    /**
+     * 私聊1的记录
+     */
+    public static List<Msg> friendsMsg1;
     /* ***********************************以上将模拟n个群消息记录、请在使用的时候自行添加*********************************** */
 
 

@@ -34,10 +34,12 @@ public class ImSystemService {
         }
 
         try {
+            //1给2发,3给2发,队列名是否可以相同。
             jmsMessagingTemplate.convertAndSend(new ActiveMQQueue(String.valueOf(receiverId)), msg);
 
             writeLog(senderId, receiverId, null, type, msg);
         } catch (Exception e) {
+            //发消息到activeMq一定会成功,怎么能知道接收者是否消费了activeMq上的消息？
             writeLog(senderId, receiverId, null, type, "FAILTOSEND");
             return false;
         }
@@ -78,7 +80,7 @@ public class ImSystemService {
         return true;
     }
 
-    public boolean uplaodFile(MultipartFile file) {
+    public boolean uploadFile(MultipartFile file) {
 
         try {
             BufferedOutputStream bos = null;

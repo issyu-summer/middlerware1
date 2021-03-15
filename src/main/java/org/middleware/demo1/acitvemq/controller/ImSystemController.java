@@ -11,8 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.jms.JMSException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,7 +89,7 @@ public class ImSystemController {
                        @RequestParam Integer type,
                        @RequestParam(required = false) String fileName,
                        @RequestParam(required = false) Long groupId) throws JMSException {
-        boolean result = false;
+        boolean result;
 
         if(receiverId != null) {
             result = service.sendToSomebody(msg, senderId, receiverId, type, fileName);
@@ -126,7 +124,7 @@ public class ImSystemController {
                 return new Response<>().setCode(404).setMsg("文件不存在").setData(false);
             }
 
-            result = service.uplaodFile(file);
+            result = service.uploadFile(file);
         } catch (Exception e) {
             return new Response<>().setCode(400).setMsg("内部错误");
         }
