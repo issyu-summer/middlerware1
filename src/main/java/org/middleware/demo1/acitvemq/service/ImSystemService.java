@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.jms.*;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -31,6 +32,7 @@ public class ImSystemService {
     private HashMap<Long,Integer> msgReceiverRecordsOrderMap;
     private List<Msg> msgGroupRecordList;
     private HashMap<Long,Integer> msgGroupRecordsOrderMap;
+    private HashMap<String,String> fileSaveMap;
 
     public boolean sendToSomebody(String msg, Long senderId, Long receiverId, Integer type, String fileName) throws JMSException {
         if(senderId == null || receiverId == null || msg == null){
@@ -87,11 +89,20 @@ public class ImSystemService {
     public boolean uploadFile(MultipartFile file) {
 
         try {
+            File folder = new File("src/main/resources/static/");
+            if(!folder.exists()){
+                folder.mkdir();
+            }
+
             BufferedOutputStream bos = null;
             bos = new BufferedOutputStream(new FileOutputStream("src/main/resources/static/" + file.getOriginalFilename()));
             bos.write(file.getBytes());
             bos.close();
 
+            if(fileSaveMap == null){
+                fileSaveMap = new HashMap<>();
+            }
+            fileSaveMap.put(file.getOriginalFilename(),"/"+file.getOriginalFilename());
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -175,6 +186,14 @@ public class ImSystemService {
                 }
             }
             return recordListRetVo;
+        }
+    }
+
+    public String getFile(String fileName){
+        if(fileSaveMap == null){
+            return null;
+        }else{
+            return fileSaveMap.get(fileName);
         }
     }
 }

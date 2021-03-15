@@ -136,14 +136,19 @@ public class ImSystemController {
     }
 
     /**
-     * 下载
+     * 下载,输入对应文件名,获取相对文件路径,如输入a.txt获取到/a.txt。必须先调用fileSave接口成功,文件才会被记录
+     * @author qqpet24
      * @param fileName
      * @return
      */
-    @PostMapping("/downLoad")
-    public Object downLoad(@RequestParam String fileName){
-        //String fileName+url
-        return null;
+    @GetMapping("/download")
+    public Object download(@RequestParam String fileName){
+        String result = service.getFile(fileName);
+        if(result == null){
+            return new Response<>().setCode(404).setData("查不到该文件");
+        }else{
+            return new Response<>().setCode(0).setData("成功").setData(result);
+        }
     }
 
     //发送文件和存储转发的流程：A调用/fileSave--->/send----->B收到了消息------->/downLoad
