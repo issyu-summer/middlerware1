@@ -100,6 +100,9 @@ public class ImSystemController {
         else if(groupId != null) {
             result = service.sendToGroup(msg, senderId, groupId, type, fileName);
         }
+        else {
+            return new Response<>().setCode(400).setMsg("接收方为空");
+        }
 
         //true or false
         return new Response<>().setCode(0).setMsg("OK").setData(result);
@@ -115,12 +118,23 @@ public class ImSystemController {
      */
     @PostMapping("/fileSave")
     public Object fileSave(HttpServletRequest request,
-                           @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
-        byte[] bytes = file.getBytes();
-        //todo 上传文件至文件服务器（进度条？）
+                           @RequestParam(value = "file", required = true) MultipartFile file){
+        boolean result = false;
+
+        try {
+            if(file == null) {
+                return new Response<>().setCode(404).setMsg("文件不存在").setData(false);
+            }
+
+            result = service.uplaodFile(file);
+        } catch (Exception e) {
+            return new Response<>().setCode(400).setMsg("内部错误");
+        }
+
+        //todo （进度条？）
 
         //true of false
-        return null;
+        return new Response<>().setCode(0).setData("成功").setData(result);
     }
 
     /**
