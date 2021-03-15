@@ -6,7 +6,9 @@ package org.middleware.demo1.acitvemq.config.content;
  */
 public enum Type {
     TEXT(0,"text"),
-    FILE(1,"file");
+    FILE(1,"file"),
+    NONE(2,"none");//意思是没有传入类型
+
     private int code;
     private String type;
 
@@ -21,5 +23,14 @@ public enum Type {
 
     public String getType(){
         return this.type;
+    }
+
+    public static Type getEnum(Integer id){
+        for(Type t:Type.values()){
+            if(id.equals(t.code)){
+                return t;
+            }
+        }
+        return Type.NONE;
     }
 }
