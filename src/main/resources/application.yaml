@@ -1,11 +1,22 @@
 spring:
   activemq:
     broker-url: tcp://101.37.20.199:61616
+#    pool:
+#      max-connections: 10
+#      use-anonymous-producers: true
+#      enabled: true   #默认是false,即不使用连接池
     user: admin
     password: admin
+#   close-timeout: 15s
+#    pool:
+#      use-anonymous-producers: true
   jms:
     pub-sub-domain: false  #true是topic false是queue
 
 queueName: queue01
 topicName: topic01
 
+#debug: true
+
+
+#需要解决queue和topic在同一个微服务无法同时使用的问题

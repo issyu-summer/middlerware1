@@ -1,7 +1,6 @@
 package org.middleware.demo1.acitvemq.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +48,9 @@ public class Config {
         return new ActiveMQQueue(queueName);
     }
 
+    /**
+     * 该消息队列的模板,默认时同步发送的方式
+     */
     @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
 
@@ -67,6 +69,7 @@ public class Config {
                      //如果有activeMq有未消费的消息
                      TextMessage textMessage
                              = jmsMessagingTemplate.receiveAndConvert(queue, TextMessage.class);
+
 
                      if(!Objects.isNull(textMessage)) {
                          log.info("监听到消息");
