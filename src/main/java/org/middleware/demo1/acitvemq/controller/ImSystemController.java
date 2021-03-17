@@ -1,16 +1,22 @@
 package org.middleware.demo1.acitvemq.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.middleware.demo1.acitvemq.config.Response;
 import org.middleware.demo1.acitvemq.config.content.Content;
 import org.middleware.demo1.acitvemq.config.content.Msg;
+import org.middleware.demo1.acitvemq.config.webSocket.WebSocketServer;
 import org.middleware.demo1.acitvemq.entity.vo.FriendListRetVo;
 import org.middleware.demo1.acitvemq.service.ImSystemService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.jms.JMSException;
+import javax.jms.Queue;
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.PathParam;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +33,19 @@ public class ImSystemController {
     @Autowired
     private ImSystemService service;
 
+    @Autowired
+    private JmsMessagingTemplate jmsMessagingTemplate;
+
+    @GetMapping("/test")
+    public Object send4Msg(){
+        Queue queue = new ActiveMQQueue("queue");
+        jmsMessagingTemplate.convertAndSend(queue,"saddfasf你在吗？");
+        jmsMessagingTemplate.convertAndSend(queue,"周日下午有时间吗？");
+        jmsMessagingTemplate.convertAndSend(queue,"我们一起去吃饭啊");
+        jmsMessagingTemplate.convertAndSend(queue,"我听菜虚困说,你想叛变革命?");
+        jmsMessagingTemplate.convertAndSend(queue,"原来是它不给你革命领导,那没事了");
+        return new Response<>();
+    }
     /**
      * webSocket
      *
@@ -39,7 +58,19 @@ public class ImSystemController {
                           @RequestParam Integer type,
                           @RequestParam(required = false) String fileName,
                           @RequestParam(required = false) String groupName){
+
+
         //最近十条
+        return null;
+    }
+
+    @Autowired
+    private WebSocketServer webSocketServer;
+    /**
+     * test webSocket
+     */
+    @GetMapping("/init/{userId}")
+    public Object init(@PathParam("userId") Long userId){
         return null;
     }
 

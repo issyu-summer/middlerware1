@@ -17,7 +17,7 @@ import lombok.experimental.Accessors;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Response<T> {
 
-    private int code;
-    private String msg;
+    private int code=0;
+    private String msg="Ok";
     private T data;
 }

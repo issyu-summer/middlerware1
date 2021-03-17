@@ -27,9 +27,12 @@ class ImSystemApplicationTests {
 
     @Test
     void send() {
-        jmsMessagingTemplate.convertAndSend(queue,"测试消息1");
-        jmsMessagingTemplate.convertAndSend(queue,"测试消息2");
-        jmsMessagingTemplate.convertAndSend(queue,"测试消息3");
+        jmsMessagingTemplate.convertAndSend(queue,"jack:小明你在吗？");
+        jmsMessagingTemplate.convertAndSend(queue,"jack:周日下午有时间吗？");
+        jmsMessagingTemplate.convertAndSend(queue,"jack:我们一起去吃饭啊");
+        jmsMessagingTemplate.convertAndSend(queue,"jack:我听菜虚困说,你想叛变革命?");
+        jmsMessagingTemplate.convertAndSend(queue,"jack:原来是它不给你革命领导,那没事了");
+
     }
 
     @Test
@@ -37,6 +40,7 @@ class ImSystemApplicationTests {
 
         //jmsMessageTemplate设置超时时间
         Objects.requireNonNull(jmsMessagingTemplate.getJmsTemplate()).setReceiveTimeout(5000);
+
 
         java.util.Queue<String> queue1=new LinkedList<>();
         String msg= jmsMessagingTemplate.receiveAndConvert(queue, String.class);
