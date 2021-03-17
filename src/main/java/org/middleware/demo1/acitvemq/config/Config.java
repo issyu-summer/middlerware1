@@ -33,9 +33,4 @@ public class Config {
     @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
 
-    @Autowired
-    private Queue queue;
-
-
-
 }

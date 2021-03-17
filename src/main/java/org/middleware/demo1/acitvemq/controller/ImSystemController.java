@@ -198,6 +198,7 @@ public class ImSystemController {
      * @author qqpet24
      * @param nums 聊天记录条数限制,默认10条
      * @param orders 聊天记录顺序,如果orders为1,nums为3,意思是从聊天记录中的第二条数据开始最多返回3条聊天记录,默认从0开始
+     * @param senderId 发送人ID
      * @param receiverId 接收人ID,意味着是一对一聊天
      * @param groupId 群ID,意味着是群聊,groupId和receiverId有且仅有一个
      * @return
@@ -206,13 +207,14 @@ public class ImSystemController {
     @GetMapping("/record")
     public Object record(@RequestParam(required = false,defaultValue = "10") Integer nums,
                          @RequestParam(required = false,defaultValue = "0") Integer orders,
+                         @RequestParam Long senderId,
                          @RequestParam(required = false) Long receiverId,
                          @RequestParam(required = false) Long groupId){
         try{
             if((receiverId == null && groupId == null ) || (receiverId != null && groupId != null)){
                 return new Response<>().setCode(400).setData("请求的receiverId和groupId必须有且仅有一个");
             }
-            return new Response<>().setCode(0).setData("成功").setData(service.getRecord(nums,orders,receiverId,groupId));
+            return new Response<>().setCode(0).setData("成功").setData(service.getRecord(nums,orders,senderId,receiverId,groupId));
         }catch (Exception e){
             return new Response<>().setCode(500).setData(e.getMessage());
         }

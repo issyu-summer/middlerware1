@@ -150,7 +150,7 @@ public class ImSystemService {
         }
     }
 
-    public RecordListRetVo getRecord(Integer nums, Integer orders, Long receiverId, Long groupId){
+    public RecordListRetVo getRecord(Integer nums, Integer orders, Long senderId,Long receiverId, Long groupId){
         if(msgReceiverRecordList == null){
             msgReceiverRecordList = new LinkedList<>();
         }
@@ -165,11 +165,13 @@ public class ImSystemService {
 
             int tmpOrder = 0;
             for(Msg tmpMsg : msgReceiverRecordList){
-                if(tmpMsg.getReceiverId().equals(receiverId)){
-                    if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
-                        recordListRetVo.getMsgs().add(tmpMsg);
+                if(tmpMsg.getSenderId().equals(senderId)){
+                    if(tmpMsg.getReceiverId().equals(receiverId)){
+                        if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
+                            recordListRetVo.getMsgs().add(tmpMsg);
+                        }
+                        tmpOrder++;
                     }
-                    tmpOrder++;
                 }
             }
             return recordListRetVo;
@@ -178,11 +180,13 @@ public class ImSystemService {
 
             int tmpOrder = 0;
             for(Msg tmpMsg : msgGroupRecordList){
-                if(tmpMsg.getReceiverId().equals(groupId)){
-                    if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
-                        recordListRetVo.getMsgs().add(tmpMsg);
+                if(tmpMsg.getSenderId().equals(senderId)){
+                    if(tmpMsg.getReceiverId().equals(groupId)){
+                        if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
+                            recordListRetVo.getMsgs().add(tmpMsg);
+                        }
+                        tmpOrder++;
                     }
-                    tmpOrder++;
                 }
             }
             return recordListRetVo;
