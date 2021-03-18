@@ -16,4 +16,6 @@ public class FileVo{
 
     private byte[] file;
 
+    private Long senderId;
+
 }

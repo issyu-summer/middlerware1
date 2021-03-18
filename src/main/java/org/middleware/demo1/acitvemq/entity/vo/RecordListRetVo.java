@@ -20,6 +20,8 @@ import java.util.List;
 public class RecordListRetVo {
     private Long receiverId;
 
+    private Long senderId;
+
     private Long groupId;
 
     private Integer nums;

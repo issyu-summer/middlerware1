@@ -37,7 +37,7 @@ public class ImSystemController {
     private JmsMessagingTemplate jmsMessagingTemplate;
 
     @GetMapping("/test")
-    public Object send4Msg(){
+    public Object send5Msg(){
         Queue queue = new ActiveMQQueue("queue");
         jmsMessagingTemplate.convertAndSend(queue,"saddfasf你在吗？");
         jmsMessagingTemplate.convertAndSend(queue,"周日下午有时间吗？");

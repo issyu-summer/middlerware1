@@ -5,6 +5,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.config.content.Type;
 import org.middleware.demo1.acitvemq.entity.vo.FileVo;
+import org.middleware.demo1.acitvemq.entity.vo.MsgVo;
 import org.middleware.demo1.acitvemq.entity.vo.RecordListRetVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
@@ -33,6 +34,8 @@ public class ImSystemService {
     private List<Msg> msgGroupRecordList;
     private HashMap<Long,Integer> msgGroupRecordsOrderMap;
     private HashMap<String,String> fileSaveMap;
+    private HashMap<Long,ActiveMQQueue> queueMap;
+    private HashMap<Long,ActiveMQTopic> topicMap;
 
     public boolean sendToSomebody(String msg, Long senderId, Long receiverId, Integer type, String fileName) throws JMSException {
         if(senderId == null || receiverId == null || msg == null){
@@ -41,11 +44,14 @@ public class ImSystemService {
 
         try {
             //1给2发,3给2发,队列名是否可以相同。
-            jmsMessagingTemplate.convertAndSend(new ActiveMQQueue(String.valueOf(receiverId)), msg);
+            //同时只进行一个通信；初步在消息中加入senderId
+
+            jmsMessagingTemplate.convertAndSend(getQueue(receiverId), new MsgVo(msg,senderId));
 
             writeLog(senderId, receiverId, null, type, msg);
         } catch (Exception e) {
             //发消息到activeMq一定会成功,怎么能知道接收者是否消费了activeMq上的消息？
+            //不知道
             writeLog(senderId, receiverId, null, type, "FAILTOSEND");
             return false;
         }
@@ -60,7 +66,8 @@ public class ImSystemService {
         }
 
         try {
-            jmsMessagingTemplate.convertAndSend(new ActiveMQTopic(String.valueOf(groupId)), msg);
+
+            jmsMessagingTemplate.convertAndSend(getTopic(groupId), new MsgVo(msg,senderId));
 
             writeLog(senderId, null, groupId, type, msg);
         } catch (Exception e) {
@@ -74,8 +81,9 @@ public class ImSystemService {
     public boolean sendFile(Long senderId, Long receiverId, String fileName, byte[] file) {
 
         try {
-            FileVo vo = new FileVo(fileName, file);
-            jmsMessagingTemplate.convertAndSend(new ActiveMQQueue(String.valueOf(receiverId)), vo);
+
+            FileVo vo = new FileVo(fileName, file, senderId);
+            jmsMessagingTemplate.convertAndSend(getQueue(receiverId), vo);
 
             String log = "SEND_FILE:"+fileName;
             writeLog(senderId, receiverId, null, 1, log);
@@ -102,7 +110,7 @@ public class ImSystemService {
             if(fileSaveMap == null){
                 fileSaveMap = new HashMap<>();
             }
-            fileSaveMap.put(file.getOriginalFilename(),"/"+file.getOriginalFilename());
+            fileSaveMap.put(file.getOriginalFilename(),"http://localhost:9000/"+file.getOriginalFilename());
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -136,7 +144,7 @@ public class ImSystemService {
                 msgReceiverRecordsOrderMap.put(receiverId,orderId);
             }
             msgReceiverRecordList.add(new Msg().setId(id).setType(Type.getEnum(type)).setContent(msg).setReceiverId(receiverId).setSenderId(senderId).setOrder(orderId));
-        }else{
+        } else{
             Long id = (long) msgGroupRecordList.size();
             Integer orderId = msgGroupRecordsOrderMap.get(groupId);
             if(orderId == null){
@@ -161,7 +169,7 @@ public class ImSystemService {
         recordListRetVo.setMsgs(new LinkedList<>());
 
         if(receiverId != null){
-            recordListRetVo.setReceiverId(receiverId).setNums(nums).setOrders(orders);
+            recordListRetVo.setReceiverId(receiverId).setSenderId(senderId).setNums(nums).setOrders(orders);
 
             int tmpOrder = 0;
             for(Msg tmpMsg : msgReceiverRecordList){
@@ -176,7 +184,7 @@ public class ImSystemService {
             }
             return recordListRetVo;
         }else{
-            recordListRetVo.setGroupId(groupId).setNums(nums).setOrders(orders);
+            recordListRetVo.setGroupId(groupId).setSenderId(senderId).setNums(nums).setOrders(orders);
 
             int tmpOrder = 0;
             for(Msg tmpMsg : msgGroupRecordList){
@@ -199,5 +207,37 @@ public class ImSystemService {
         }else{
             return fileSaveMap.get(fileName);
         }
+    }
+
+    private ActiveMQQueue getQueue(Long receiverId) {
+        if(queueMap == null){
+            queueMap = new HashMap<>();
+        }
+
+        ActiveMQQueue queue;
+        if(queueMap.get(receiverId) == null){
+            queue = new ActiveMQQueue(String.valueOf(receiverId));
+            queueMap.put(receiverId, queue);
+        } else {
+            queue = queueMap.get(receiverId);
+        }
+
+        return queue;
+    }
+
+    private ActiveMQTopic getTopic(Long groupId) {
+        if(topicMap == null) {
+            topicMap = new HashMap<>();
+        }
+
+        ActiveMQTopic topic;
+        if(topicMap.get(groupId) == null){
+            topic = new ActiveMQTopic(String.valueOf(groupId));
+            topicMap.put(groupId, topic);
+        } else {
+            topic = topicMap.get(groupId);
+        }
+
+        return topic;
     }
 }
