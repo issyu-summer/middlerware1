@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.middleware.demo1.acitvemq.config.Response;
 import org.middleware.demo1.acitvemq.config.content.Content;
+import org.middleware.demo1.acitvemq.config.content.Group;
 import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.config.webSocket.WebSocketServer;
 import org.middleware.demo1.acitvemq.entity.vo.FriendListRetVo;
+import org.middleware.demo1.acitvemq.entity.vo.GroupVo;
 import org.middleware.demo1.acitvemq.service.ImSystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
@@ -218,6 +220,30 @@ public class ImSystemController {
         }catch (Exception e){
             return new Response<>().setCode(500).setData(e.getMessage());
         }
+    }
+
+    @GetMapping("/groups")
+    public Object getGroups(Long userId) {
+        List<GroupVo> groups = new ArrayList<>();
+        if(list1.contains(userId)) {
+            groups.add(new GroupVo(1L, "group1"));
+        }
+        if(list2.contains(userId)) {
+            groups.add(new GroupVo(2L, "group2"));
+        }
+
+        return new Response<>().setMsg("OK").setCode(200).setData(groups);
+    }
+
+    @GetMapping("/members")
+    public Object getGroupMembers(Long groupId) {
+        if(groupId.equals(1L)) {
+            return new Response<>().setMsg("OK").setCode(200).setData(group1.getUserList());
+        } else if(groupId.equals(2L)) {
+            return new Response<>().setMsg("OK").setCode(200).setData(group2.getUserList());
+        }
+
+        return new Response<>().setCode(400).setMsg("群不存在");
     }
 
 
