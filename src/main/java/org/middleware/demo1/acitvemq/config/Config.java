@@ -20,17 +20,9 @@ import javax.jms.Queue;
 @EnableJms
 @Slf4j
 public class Config {
-
-    /**
-     * json工具
-     */
-    @Autowired
-    private ObjectMapper objectMapper;
-
     /**
      * 该消息队列的模板,默认时同步发送的方式
      */
     @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
-
 }

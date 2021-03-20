@@ -1,5 +1,6 @@
 package org.middleware.demo1.acitvemq.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.middleware.demo1.acitvemq.config.content.Msg;
@@ -28,6 +29,8 @@ import java.util.List;
 public class ImSystemService {
 
     @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
 
     private List<Msg> msgReceiverRecordList;
@@ -35,8 +38,8 @@ public class ImSystemService {
     private List<Msg> msgGroupRecordList;
     private HashMap<Long,Integer> msgGroupRecordsOrderMap;
     private HashMap<String,String> fileSaveMap;
-    private HashMap<Long,ActiveMQQueue> queueMap;
-    private HashMap<Long,ActiveMQTopic> topicMap;
+    private HashMap<String,ActiveMQQueue> queueMap;
+    private HashMap<String,ActiveMQTopic> topicMap;
 
     public boolean sendToSomebody(String msg, Long senderId, Long receiverId, Integer type, String fileName) throws JMSException {
         if(senderId == null || receiverId == null || msg == null){
@@ -46,7 +49,8 @@ public class ImSystemService {
         try {
             //1给2发,3给2发,队列名是否可以相同。
             //同时只进行一个通信；初步在消息中加入senderId
-            jmsMessagingTemplate.convertAndSend(getQueue(receiverId), new MsgVo(msg,senderId));
+            String json=objectMapper.writeValueAsString( new MsgVo(msg,senderId));
+            jmsMessagingTemplate.convertAndSend(new ActiveMQQueue("queue01"),json);
 
             writeLog(senderId, receiverId, null, type, msg);
         } catch (Exception e) {
@@ -68,7 +72,7 @@ public class ImSystemService {
 
         try {
 
-            jmsMessagingTemplate.convertAndSend(getTopic(groupId), new MsgVo(msg,senderId));
+            jmsMessagingTemplate.convertAndSend(new ActiveMQTopic("topic01"), new MsgVo(msg,senderId));
 
             writeLog(senderId, null, groupId, type, msg);
         } catch (Exception e) {
@@ -84,7 +88,7 @@ public class ImSystemService {
         try {
 
             FileVo vo = new FileVo(fileName, file, senderId);
-            jmsMessagingTemplate.convertAndSend(getQueue(receiverId), vo);
+            jmsMessagingTemplate.convertAndSend(new ActiveMQQueue("queue01"), vo);
 
             String log = "SEND_FILE:"+fileName;
             writeLog(senderId, receiverId, null, 1, log);
@@ -216,33 +220,33 @@ public class ImSystemService {
         }
     }
 
-    private ActiveMQQueue getQueue(Long receiverId) {
+    private ActiveMQQueue getQueue(String queueName) {
         if(queueMap == null){
             queueMap = new HashMap<>();
         }
 
         ActiveMQQueue queue;
-        if(queueMap.get(receiverId) == null){
-            queue = new ActiveMQQueue(String.valueOf(receiverId));
-            queueMap.put(receiverId, queue);
+        if(queueMap.get(queueName) == null){
+            queue = new ActiveMQQueue(queueName);
+            queueMap.put(queueName, queue);
         } else {
-            queue = queueMap.get(receiverId);
+            queue = queueMap.get(queueName);
         }
 
         return queue;
     }
 
-    private ActiveMQTopic getTopic(Long groupId) {
+    private ActiveMQTopic getTopic(String topicName) {
         if(topicMap == null) {
             topicMap = new HashMap<>();
         }
 
         ActiveMQTopic topic;
-        if(topicMap.get(groupId) == null){
-            topic = new ActiveMQTopic(String.valueOf(groupId));
-            topicMap.put(groupId, topic);
+        if(topicMap.get(topicName) == null){
+            topic = new ActiveMQTopic(String.valueOf(topicName));
+            topicMap.put(topicName, topic);
         } else {
-            topic = topicMap.get(groupId);
+            topic = topicMap.get(topicName);
         }
 
         return topic;

@@ -10,7 +10,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MsgVo implements Serializable {
-    private String msg;
+    private String content;
 
     private Long senderId;
 

@@ -9,8 +9,6 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.stereotype.Component;
 
@@ -82,12 +80,17 @@ public class WebSocketServer {
             @PathParam("identityName") String identityName) {
         String cacheMapKey=identityName+":"+username;
         SESSION_CACHE.put(cacheMapKey,Objects.requireNonNull(session));
-        String initJson="初始化所有消息";
-        session.getAsyncRemote().sendText(initJson);
+        String initJson="";
         if(isQueue(identityName)){
             log.info("queueName:"+identityName+" user:"+username+"与服务器建立连接成功");
+            initJson=this.convert(this.receiveAllMsgFromQueue(identityName),username);
         }else {
             log.info("topicName:"+identityName+" user:"+username+"与服务器建立连接成功");
+            initJson=this.convert(this.receiveAllMsgFromQueue(identityName),username);
+        }
+        log.info("消息窗口初始化中:"+initJson);
+        if(initJson!=null) {
+            session.getAsyncRemote().sendText(initJson);
         }
     }
 
@@ -99,13 +102,26 @@ public class WebSocketServer {
      */
     @OnMessage
     public void onMsg(String receiverName,@PathParam("username") String username,@PathParam("identityName") String identityName){
-        log.info("从activeMq接收所有未被消费的消息");
-        Queue<String> msgQueue;
-        if(isQueue(identityName)){
-            msgQueue=this.receiveAllMsgFromQueue(identityName);
-        }else {
-            msgQueue=this.receiveAllMsgFromTopic(identityName);
+        String cacheMapKey=identityName+":"+receiverName;
+        Session session;
+        if(SESSION_CACHE.containsKey(cacheMapKey)) {
+             session= SESSION_CACHE.get(cacheMapKey);
+             //当接收者有会话连接时才做事
+            log.info("从activeMq接收所有未被消费的消息");
+            //没有接收者时,只有/send生效
+            String json="";
+            if(isQueue(identityName)) {
+                json=this.receiveOneMsgFromQueue(identityName);
+            }else {
+                json=this.receiveOneMsgFromTopic(identityName);
+            }
+            if(json!=null){
+                session.getAsyncRemote().sendText(json);
+                log.info("发送消息至客户端:"+json);
+            }
         }
+//        Queue<String> msgQueue;
+
         //int size = msgQueue.size();
         //每条消息都是一个json,一共需要发size次
 //        List<String> jsonList=msgList.stream().map(e-> {
@@ -116,14 +132,10 @@ public class WebSocketServer {
 //            }
 //            return null;
 //        }).collect(Collectors.toList());
-        String json=this.convert(msgQueue,username);
+//        String json=this.convert(msgQueue,username);
         //是jack想发送给peter,不是发送给他自己。
-        String cacheMapKey=identityName+":"+receiverName;
-        Session session = SESSION_CACHE.get(cacheMapKey);
-        if(json!=null){
-            session.getAsyncRemote().sendText(json);
-            log.info("发送消息至客户端:"+json);
-        }
+
+
     }
 
     @OnClose
@@ -143,17 +155,31 @@ public class WebSocketServer {
      * @return 接收到消息的json
      */
     private String convert(Queue<String> msgQueue, String username){
-        AtomicInteger order = new AtomicInteger();
-        List<Msg> msgList = new ArrayList<>();
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[");
         if(!msgQueue.isEmpty()){
-            msgList =msgQueue.stream().map(e-> new Msg(username, e, order.getAndIncrement())).collect(Collectors.toList());
+            msgQueue.forEach(s -> stringBuilder.append(s).append(","));
         }
-        try {
-            return objectMapper.writeValueAsString(msgList);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+        if(stringBuilder.charAt(stringBuilder.length()-1)==',') {
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         }
-        return null;
+        stringBuilder.append("]");
+        return stringBuilder.toString();
+    }
+    /**
+     * 从activeMQ队列中接收一条消息
+     */
+    private String receiveOneMsgFromQueue(String queueName){
+        Objects.requireNonNull(jmsMessagingTemplate.getJmsTemplate()).setReceiveTimeout(5000);
+        return jmsMessagingTemplate.receiveAndConvert(new ActiveMQQueue(queueName), String.class);
+    }
+
+    /**
+     * 从activeMQ主题中接收一条消息
+     */
+    private String receiveOneMsgFromTopic(String topicName){
+        Objects.requireNonNull(jmsMessagingTemplate.getJmsTemplate()).setReceiveTimeout(5000);
+        return jmsMessagingTemplate.receiveAndConvert(new ActiveMQTopic(topicName), String.class);
     }
     /**
      * 从activeMq队列中接收所有消息
@@ -186,6 +212,7 @@ public class WebSocketServer {
         }
         return queue1;
     }
+
     /**
      * 服务器主懂推送到client
      */
@@ -208,7 +235,7 @@ public class WebSocketServer {
     @NoArgsConstructor
     static class  Msg{
         private String username;
-        private String msg;
+        private String content;
         private Integer order;
     }
 }
