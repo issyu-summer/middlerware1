@@ -155,7 +155,7 @@ public class ImSystemService {
                 orderId += 1;
                 msgGroupRecordsOrderMap.put(groupId,orderId);
             }
-            msgGroupRecordList.add(new Msg().setId(id).setType(Type.getEnum(type)).setContent(msg).setGruopId(groupId).setOrder(orderId));
+            msgGroupRecordList.add(new Msg().setId(id).setType(Type.getEnum(type)).setContent(msg).setSenderId(senderId).setGruopId(groupId).setOrder(orderId));
         }
     }
 
