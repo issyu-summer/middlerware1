@@ -44,4 +44,9 @@ public class Msg {
      */
     private Long receiverId;
 
+    /**
+     * 群消息-群ID
+     */
+    private Long gruopId;
+
 }

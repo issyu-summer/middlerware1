@@ -224,7 +224,7 @@ public class ImSystemController {
     }
 
     @GetMapping("/groups")
-    public Object getGroups(Long userId) {
+    public Object getGroups(@RequestParam Long userId) {
         List<GroupVo> groups = new ArrayList<>();
 
         for(User user:list1) {
@@ -242,7 +242,7 @@ public class ImSystemController {
     }
 
     @GetMapping("/members")
-    public Object getGroupMembers(Long groupId) {
+    public Object getGroupMembers(@RequestParam Long groupId) {
         if(groupId.equals(1L)) {
             return new Response<>().setMsg("OK").setCode(200).setData(group1.getUserList());
         } else if(groupId.equals(2L)) {

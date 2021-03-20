@@ -150,12 +150,12 @@ public class ImSystemService {
             Integer orderId = msgGroupRecordsOrderMap.get(groupId);
             if(orderId == null){
                 orderId = 0;
-                msgGroupRecordsOrderMap.put(receiverId,orderId);
+                msgGroupRecordsOrderMap.put(groupId,orderId);
             }else{
                 orderId += 1;
-                msgGroupRecordsOrderMap.put(receiverId,orderId);
+                msgGroupRecordsOrderMap.put(groupId,orderId);
             }
-            msgGroupRecordList.add(new Msg().setId(id).setType(Type.getEnum(type)).setContent(msg).setReceiverId(groupId).setSenderId(senderId).setOrder(orderId));
+            msgGroupRecordList.add(new Msg().setId(id).setType(Type.getEnum(type)).setContent(msg).setGruopId(groupId).setOrder(orderId));
         }
     }
 
@@ -189,14 +189,20 @@ public class ImSystemService {
 
             int tmpOrder = 0;
             for(Msg tmpMsg : msgGroupRecordList){
-                if(tmpMsg.getSenderId().equals(senderId)){
-                    if(tmpMsg.getReceiverId().equals(groupId)){
-                        if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
-                            recordListRetVo.getMsgs().add(tmpMsg);
-                        }
-                        tmpOrder++;
+                if(tmpMsg.getGruopId() != null && tmpMsg.getGruopId().equals(groupId)) {
+                    if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
+                        recordListRetVo.getMsgs().add(tmpMsg);
                     }
+                    tmpOrder++;
                 }
+//                if(tmpMsg.getSenderId().equals(senderId)){
+//                    if(tmpMsg.getReceiverId().equals(groupId)){
+//                        if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
+//                            recordListRetVo.getMsgs().add(tmpMsg);
+//                        }
+//                        tmpOrder++;
+//                    }
+//                }
             }
             return recordListRetVo;
         }
