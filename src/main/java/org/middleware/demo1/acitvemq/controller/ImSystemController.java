@@ -6,6 +6,7 @@ import org.middleware.demo1.acitvemq.config.Response;
 import org.middleware.demo1.acitvemq.config.content.Content;
 import org.middleware.demo1.acitvemq.config.content.Group;
 import org.middleware.demo1.acitvemq.config.content.Msg;
+import org.middleware.demo1.acitvemq.config.content.User;
 import org.middleware.demo1.acitvemq.config.webSocket.WebSocketServer;
 import org.middleware.demo1.acitvemq.entity.vo.FriendListRetVo;
 import org.middleware.demo1.acitvemq.entity.vo.GroupVo;
@@ -225,11 +226,16 @@ public class ImSystemController {
     @GetMapping("/groups")
     public Object getGroups(Long userId) {
         List<GroupVo> groups = new ArrayList<>();
-        if(list1.contains(userId)) {
-            groups.add(new GroupVo(1L, "group1"));
+
+        for(User user:list1) {
+            if(user.getId().equals(userId)) {
+                groups.add(new GroupVo(1L, "group1"));
+            }
         }
-        if(list2.contains(userId)) {
-            groups.add(new GroupVo(2L, "group2"));
+        for(User user:list2) {
+            if(user.getId().equals(userId)) {
+                groups.add(new GroupVo(2L, "group2"));
+            }
         }
 
         return new Response<>().setMsg("OK").setCode(200).setData(groups);
