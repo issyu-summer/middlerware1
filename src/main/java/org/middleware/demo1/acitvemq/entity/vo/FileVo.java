@@ -4,13 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * @author yasuko-an
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FileVo{
+public class FileVo implements Serializable {
 
     private String fileName;
 

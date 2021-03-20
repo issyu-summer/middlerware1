@@ -29,6 +29,7 @@ public class ImSystemService {
 
     @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
+
     private List<Msg> msgReceiverRecordList;
     private HashMap<Long,Integer> msgReceiverRecordsOrderMap;
     private List<Msg> msgGroupRecordList;
@@ -45,11 +46,11 @@ public class ImSystemService {
         try {
             //1给2发,3给2发,队列名是否可以相同。
             //同时只进行一个通信；初步在消息中加入senderId
-
             jmsMessagingTemplate.convertAndSend(getQueue(receiverId), new MsgVo(msg,senderId));
 
             writeLog(senderId, receiverId, null, type, msg);
         } catch (Exception e) {
+            e.printStackTrace();
             //发消息到activeMq一定会成功,怎么能知道接收者是否消费了activeMq上的消息？
             //不知道
             writeLog(senderId, receiverId, null, type, "FAILTOSEND");
