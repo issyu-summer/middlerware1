@@ -1,0 +1,1 @@
+watchdog.sh里面,一个变量是jdk位置,一个变量是jar包位置,两个变量都需要修改,要求使用时候,jar包和sh文件放在同一个文件夹下,用sudo sh ./watchdog.sh运行。
