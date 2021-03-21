@@ -1,6 +1,5 @@
 package org.middleware.demo1.acitvemq.config.webSocket;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +8,11 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
+import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.OnClose;
@@ -20,8 +23,6 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * ws://localhost:8080/websocket/{username}/{identityName}
@@ -48,7 +49,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class WebSocketServer {
 
+    /**
+     * 维护topicName
+     */
+    private String identityName;
 
+    /**
+     * msgListenerContainer
+     */
+    private DefaultMessageListenerContainer msgListenerContainer
+            =ApplicationContextUtil.getApplicationContext().getBean("listenerContainer",DefaultMessageListenerContainer.class);
     /**
      * json工具
      */
@@ -69,6 +79,17 @@ public class WebSocketServer {
     private static final Map<String,Session> SESSION_CACHE =new HashMap<>();
 
     /**
+     * 会话数量标志
+     */
+    private static int sessionNum=0;
+
+    /**
+     * topic即群聊消息,jack发给peter和park,则jack需要发sessionNum-1次，
+     * 即msgNum%sessionNum==0
+     */
+    private static int msgNum=0;
+
+    /**
      * 当webSocket连接打开时,获取所有未被消费的消息,按照格式发送到前端
      * @param session server和client之间的绘画
      * @param username client's user
@@ -78,18 +99,26 @@ public class WebSocketServer {
             Session session,
             @PathParam("username") String username,
             @PathParam("identityName") String identityName) {
+        if(!isQueue(identityName)) {
+            this.initListenerContainer(identityName);
+        }
         String cacheMapKey=identityName+":"+username;
         SESSION_CACHE.put(cacheMapKey,Objects.requireNonNull(session));
-        String initJson="";
+        String initJson;
         if(isQueue(identityName)){
             log.info("queueName:"+identityName+" user:"+username+"与服务器建立连接成功");
+            sessionNum++;
+            log.info("sessionNum:"+sessionNum);
             initJson=this.convert(this.receiveAllMsgFromQueue(identityName),username);
         }else {
             log.info("topicName:"+identityName+" user:"+username+"与服务器建立连接成功");
+            sessionNum++;
+            log.info("sessionNum:"+sessionNum);
             initJson=this.convert(this.receiveAllMsgFromQueue(identityName),username);
         }
         log.info("消息窗口初始化中:"+initJson);
-        if(initJson!=null) {
+        //如果时群聊,之前的聊天记录不会存在
+        if(isQueue(identityName)) {
             session.getAsyncRemote().sendText(initJson);
         }
     }
@@ -111,12 +140,24 @@ public class WebSocketServer {
             //没有接收者时,只有/send生效
             String json="";
             if(isQueue(identityName)) {
-                json=this.receiveOneMsgFromQueue(identityName);
+                if (supportTopic()) {
+                    changeJmsPattern();
+                }
+                json = this.receiveOneMsgFromQueue(identityName);
             }else {
-                json=this.receiveOneMsgFromTopic(identityName);
+                if (!supportTopic()) {
+                    changeJmsPattern();
+                }
+                //无法从此处获取消息
+                json = this.receiveOneMsgFromTopic();
             }
             if(json!=null){
                 session.getAsyncRemote().sendText(json);
+                msgNum++;
+                if(msgNum>=(sessionNum-1)) {
+                    SimulateListener.messageStr = null;
+                    msgNum=0;
+                }
                 log.info("发送消息至客户端:"+json);
             }
         }
@@ -166,6 +207,14 @@ public class WebSocketServer {
         stringBuilder.append("]");
         return stringBuilder.toString();
     }
+
+    /**
+     * 执行msgListenerContainer的初始化
+     */
+    private void initListenerContainer(String topicName){
+        this.msgListenerContainer.setDestination(new ActiveMQTopic(topicName));
+    }
+
     /**
      * 从activeMQ队列中接收一条消息
      */
@@ -177,10 +226,11 @@ public class WebSocketServer {
     /**
      * 从activeMQ主题中接收一条消息
      */
-    private String receiveOneMsgFromTopic(String topicName){
-        Objects.requireNonNull(jmsMessagingTemplate.getJmsTemplate()).setReceiveTimeout(5000);
-        return jmsMessagingTemplate.receiveAndConvert(new ActiveMQTopic(topicName), String.class);
+    private String receiveOneMsgFromTopic(){
+        String msg=SimulateListener.messageStr;
+        return msg;
     }
+
     /**
      * 从activeMq队列中接收所有消息
      */
@@ -227,6 +277,23 @@ public class WebSocketServer {
      */
     private boolean isQueue(String identityName){
         return identityName.contains("queue");
+    }
+
+    /**
+     * 判断jms模式
+     * @return
+     */
+    private boolean supportTopic(){
+        JmsTemplate jmsTemplate = jmsMessagingTemplate.getJmsTemplate();
+        return Objects.requireNonNull(jmsTemplate).isPubSubNoLocal();
+    }
+
+    /**
+     * 切换jms模式
+     */
+    private void changeJmsPattern(){
+        JmsTemplate jmsTemplate = jmsMessagingTemplate.getJmsTemplate();
+        Objects.requireNonNull(jmsTemplate).setPubSubNoLocal(true);
     }
 
     @AllArgsConstructor

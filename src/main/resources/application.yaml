@@ -18,9 +18,6 @@ spring:
       max-file-size: 512MB
       max-request-size: 512MB   #上传文件大小设置
 
-queueName: queue01
-topicName: topic01
-
 #debug: true
 
 

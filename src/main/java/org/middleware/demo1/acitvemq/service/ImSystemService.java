@@ -71,8 +71,9 @@ public class ImSystemService {
         }
 
         try {
+            String json=objectMapper.writeValueAsString( new MsgVo(msg,senderId));
 
-            jmsMessagingTemplate.convertAndSend(new ActiveMQTopic("topic01"), new MsgVo(msg,senderId));
+            jmsMessagingTemplate.convertAndSend(new ActiveMQTopic("topic01"), json);
 
             writeLog(senderId, null, groupId, type, msg);
         } catch (Exception e) {
