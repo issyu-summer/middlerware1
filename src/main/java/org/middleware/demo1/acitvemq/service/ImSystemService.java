@@ -179,14 +179,19 @@ public class ImSystemService {
 
             int tmpOrder = 0;
             for(Msg tmpMsg : msgReceiverRecordList){
-                if(tmpMsg.getSenderId().equals(senderId)){
-                    if(tmpMsg.getReceiverId().equals(receiverId)){
-                        if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
-                            recordListRetVo.getMsgs().add(tmpMsg);
-                        }
-                        tmpOrder++;
-                    }
+                if((tmpMsg.getSenderId().equals(senderId) && tmpMsg.getReceiverId().equals(receiverId)) ||
+                        (tmpMsg.getSenderId().equals(receiverId) && tmpMsg.getReceiverId().equals(senderId))){
+                    recordListRetVo.getMsgs().add(tmpMsg);
+                    tmpOrder++;
                 }
+//                if(tmpMsg.getSenderId().equals(senderId)){
+//                    if(tmpMsg.getReceiverId().equals(receiverId)){
+//                        if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
+//                            recordListRetVo.getMsgs().add(tmpMsg);
+//                        }
+//                        tmpOrder++;
+//                    }
+//                }
             }
             return recordListRetVo;
         }else{
