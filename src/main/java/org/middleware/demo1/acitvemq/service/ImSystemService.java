@@ -1,8 +1,12 @@
 package org.middleware.demo1.acitvemq.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.hyperic.sigar.Mem;
+import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarException;
 import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.config.content.Type;
 import org.middleware.demo1.acitvemq.entity.vo.FileVo;
@@ -10,13 +14,17 @@ import org.middleware.demo1.acitvemq.entity.vo.MsgVo;
 import org.middleware.demo1.acitvemq.entity.vo.RecordListRetVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,7 +34,10 @@ import java.util.List;
  * @date 2021/3/14 19:15
  */
 @Service
+@Slf4j
 public class ImSystemService {
+
+    private final Logger logger = LoggerFactory.getLogger(ImSystemService.class);
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -256,5 +267,17 @@ public class ImSystemService {
         }
 
         return topic;
+    }
+
+    @Scheduled(fixedRate = 5*60*1000)
+    public void test() throws SigarException {
+        System.out.println("——————————定时任务——————————");
+        Date date = new Date();
+        System.out.println(date.toString());
+        Sigar sigar = new Sigar();
+        Mem mem = sigar.getMem();
+        log.info("内存总量："+mem.getTotal());
+        log.info("内存使用量："+mem.getActualUsed());
+        logger.info("剩余内存："+mem.getFree());
     }
 }

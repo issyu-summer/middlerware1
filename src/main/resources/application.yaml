@@ -20,9 +20,21 @@ spring:
 
 #debug: true
 
+#日志
+logging:
+  file:
+    path: mylog
 
 #需要解决queue和topic在同一个微服务无法同时使用的问题
 
 #前后端跨域访问
 server:
   port: 9000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  server:
+    port: 8000
