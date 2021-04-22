@@ -1,14 +1,17 @@
 package org.middleware.demo1.acitvemq;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * @author Administrator
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"org.middleware.demo1.acitvemq"})
+@MapperScan("org.middleware.demo1.acitvemq.mapper")
 public class ImSystemApplication {
 
     public static void main(String[] args) {
@@ -20,4 +23,8 @@ public class ImSystemApplication {
         return new ObjectMapper();
     }
 
+    @Bean
+    RestTemplate restTemplate(){
+        return new RestTemplate();
+    }
 }

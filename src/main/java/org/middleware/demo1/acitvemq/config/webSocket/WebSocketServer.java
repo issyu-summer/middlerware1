@@ -1,6 +1,5 @@
 package org.middleware.demo1.acitvemq.config.webSocket;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,11 +7,9 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
-import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.OnClose;
@@ -21,7 +18,6 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -50,21 +46,10 @@ import java.util.*;
 public class WebSocketServer {
 
     /**
-     * 维护topicName
-     */
-    private String identityName;
-
-    /**
      * msgListenerContainer
      */
     private DefaultMessageListenerContainer msgListenerContainer
             =ApplicationContextUtil.getApplicationContext().getBean("listenerContainer",DefaultMessageListenerContainer.class);
-    /**
-     * json工具
-     */
-    private ObjectMapper objectMapper
-            =ApplicationContextUtil.getApplicationContext().getBean("objectMapper",ObjectMapper.class);
-
     /**
      * jsm消息队列模板
      */
@@ -114,6 +99,7 @@ public class WebSocketServer {
             log.info("topicName:"+identityName+" user:"+username+"与服务器建立连接成功");
             sessionNum++;
             log.info("sessionNum:"+sessionNum);
+            //此处
             initJson=this.convert(this.receiveAllMsgFromQueue(identityName),username);
         }
         log.info("消息窗口初始化中:"+initJson);
@@ -138,7 +124,7 @@ public class WebSocketServer {
              //当接收者有会话连接时才做事
             log.info("从activeMq接收所有未被消费的消息");
             //没有接收者时,只有/send生效
-            String json="";
+            String json;
             if(isQueue(identityName)) {
                 if (supportTopic()) {
                     changeJmsPattern();
@@ -161,22 +147,6 @@ public class WebSocketServer {
                 log.info("发送消息至客户端:"+json);
             }
         }
-//        Queue<String> msgQueue;
-
-        //int size = msgQueue.size();
-        //每条消息都是一个json,一共需要发size次
-//        List<String> jsonList=msgList.stream().map(e-> {
-//            try {
-//                return objectMapper.writeValueAsString(e);
-//            } catch (JsonProcessingException jsonProcessingException) {
-//                jsonProcessingException.printStackTrace();
-//            }
-//            return null;
-//        }).collect(Collectors.toList());
-//        String json=this.convert(msgQueue,username);
-        //是jack想发送给peter,不是发送给他自己。
-
-
     }
 
     @OnClose
@@ -264,13 +234,6 @@ public class WebSocketServer {
     }
 
     /**
-     * 服务器主懂推送到client
-     */
-    private void sendMessage(String msg,Session session) throws IOException {
-        session.getBasicRemote().sendText(msg);
-    }
-
-    /**
      * 判断identityName是队列名还是主体名称
      * @param identityName 标识名称
      * @return queue:true topic:false
@@ -281,7 +244,7 @@ public class WebSocketServer {
 
     /**
      * 判断jms模式
-     * @return
+     * @return true or false
      */
     private boolean supportTopic(){
         JmsTemplate jmsTemplate = jmsMessagingTemplate.getJmsTemplate();

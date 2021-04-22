@@ -1,6 +1,6 @@
 package org.middleware.demo1.acitvemq;
 
-import lombok.extern.slf4j.Slf4j;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,7 +9,9 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import javax.jms.*;
+import javax.jms.JMSException;
+import javax.jms.Queue;
+import javax.jms.TextMessage;
 import java.util.LinkedList;
 import java.util.Objects;
 
@@ -20,13 +22,11 @@ class ImSystemApplicationTests {
     private JmsMessagingTemplate jmsMessagingTemplate;
 
     @Autowired
-    private Queue queue;
-
-    @Autowired
     private ApplicationContext applicationContext;
 
     @Test
     void send() {
+        ActiveMQQueue queue = new ActiveMQQueue("queue01");
         jmsMessagingTemplate.convertAndSend(queue,"jack:小明你在吗？");
         jmsMessagingTemplate.convertAndSend(queue,"jack:周日下午有时间吗？");
         jmsMessagingTemplate.convertAndSend(queue,"jack:我们一起去吃饭啊");
@@ -37,7 +37,7 @@ class ImSystemApplicationTests {
 
     @Test
     void receiveAll(){
-
+        ActiveMQQueue queue = new ActiveMQQueue("queue01");
         //jmsMessageTemplate设置超时时间
         Objects.requireNonNull(jmsMessagingTemplate.getJmsTemplate()).setReceiveTimeout(5000);
 
@@ -59,6 +59,7 @@ class ImSystemApplicationTests {
     @Test
     @Scheduled(fixedDelay = 5000)
     void Scheduled(){
+        ActiveMQQueue queue = new ActiveMQQueue("queue01");
         jmsMessagingTemplate.convertAndSend(queue,"每隔5s定时投递消息："+i);
     }
 
@@ -87,6 +88,7 @@ class ImSystemApplicationTests {
      */
     @Test
     void async(){
+        ActiveMQQueue queue = new ActiveMQQueue("queue01");
         //默认异步开启？？？？
         jmsMessagingTemplate.convertAndSend(queue,"测试消息1");
         System.out.println();

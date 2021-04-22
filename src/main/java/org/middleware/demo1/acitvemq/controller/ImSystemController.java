@@ -1,13 +1,10 @@
 package org.middleware.demo1.acitvemq.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.middleware.demo1.acitvemq.config.Response;
 import org.middleware.demo1.acitvemq.config.content.Content;
-import org.middleware.demo1.acitvemq.config.content.Group;
 import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.config.content.User;
-import org.middleware.demo1.acitvemq.config.webSocket.WebSocketServer;
 import org.middleware.demo1.acitvemq.entity.vo.FriendListRetVo;
 import org.middleware.demo1.acitvemq.entity.vo.GroupVo;
 import org.middleware.demo1.acitvemq.service.ImSystemService;
@@ -42,39 +39,12 @@ public class ImSystemController {
     @GetMapping("/test")
     public Object send5Msg(){
         Queue queue = new ActiveMQQueue("queue");
-        jmsMessagingTemplate.convertAndSend(queue,"saddfasf你在吗？");
+        jmsMessagingTemplate.convertAndSend(queue,"你在吗？");
         jmsMessagingTemplate.convertAndSend(queue,"周日下午有时间吗？");
         jmsMessagingTemplate.convertAndSend(queue,"我们一起去吃饭啊");
         jmsMessagingTemplate.convertAndSend(queue,"我听菜虚困说,你想叛变革命?");
         jmsMessagingTemplate.convertAndSend(queue,"原来是它不给你革命领导,那没事了");
         return new Response<>();
-    }
-    /**
-     * webSocket
-     *
-     * @return
-     */
-    @GetMapping("/receive")
-    public Object receive(@RequestParam String msg,
-                          @RequestParam String sender,
-                          @RequestParam(required = false) String receiver,
-                          @RequestParam Integer type,
-                          @RequestParam(required = false) String fileName,
-                          @RequestParam(required = false) String groupName){
-
-
-        //最近十条
-        return null;
-    }
-
-    @Autowired
-    private WebSocketServer webSocketServer;
-    /**
-     * test webSocket
-     */
-    @GetMapping("/init/{userId}")
-    public Object init(@PathParam("userId") Long userId){
-        return null;
     }
 
     /**
@@ -189,22 +159,12 @@ public class ImSystemController {
 
     /**
      * @author qqpet24
-     * watchDog不是一个API
-     */
-//    @PostMapping("/watchdogs")
-//    public Object watchDog(){
-//        return null;
-//    }
-
-
-    /**
-     * @author qqpet24
      * @param nums 聊天记录条数限制,默认10条
      * @param orders 聊天记录顺序,如果orders为1,nums为3,意思是从聊天记录中的第二条数据开始最多返回3条聊天记录,默认从0开始
      * @param senderId 发送人ID
      * @param receiverId 接收人ID,意味着是一对一聊天
      * @param groupId 群ID,意味着是群聊,groupId和receiverId有且仅有一个
-     * @return
+     * @return Record
      */
 
     @GetMapping("/record")

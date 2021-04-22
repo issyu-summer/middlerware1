@@ -1,4 +1,9 @@
 spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://101.37.20.199:3306/midware
+    username: remote
+    password: issyu153
   activemq:
     broker-url: tcp://101.37.20.199:61616
 #    pool:

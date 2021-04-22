@@ -33,6 +33,9 @@ public class ImSystemService {
     @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
 
+    @Autowired
+    private FileService fileService;
+
     private List<Msg> msgReceiverRecordList;
     private HashMap<Long,Integer> msgReceiverRecordsOrderMap;
     private List<Msg> msgGroupRecordList;
@@ -109,14 +112,20 @@ public class ImSystemService {
             }
 
             BufferedOutputStream bos = null;
-            bos = new BufferedOutputStream(new FileOutputStream("src/main/resources/static/" + file.getOriginalFilename()));
+            String path="src/main/resources/static/" + file.getOriginalFilename();
+            bos = new BufferedOutputStream(new FileOutputStream(path));
             bos.write(file.getBytes());
             bos.close();
 
             if(fileSaveMap == null){
                 fileSaveMap = new HashMap<>();
             }
-            fileSaveMap.put(file.getOriginalFilename(),"http://localhost:9000/"+file.getOriginalFilename());
+            String uri="http://localhost:9000/"+file.getOriginalFilename();
+            String fileName=file.getOriginalFilename();
+            fileSaveMap.put(fileName,uri);
+            fileService.save(
+                    new org.middleware.demo1.acitvemq.entity.po.File()
+                    .setPath(path).setUri(uri).setFileName(fileName));
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -205,14 +214,6 @@ public class ImSystemService {
                     }
                     tmpOrder++;
                 }
-//                if(tmpMsg.getSenderId().equals(senderId)){
-//                    if(tmpMsg.getReceiverId().equals(groupId)){
-//                        if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
-//                            recordListRetVo.getMsgs().add(tmpMsg);
-//                        }
-//                        tmpOrder++;
-//                    }
-//                }
             }
             return recordListRetVo;
         }
