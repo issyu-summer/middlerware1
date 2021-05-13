@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.core.JmsMessagingTemplate;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.jms.Queue;
 
@@ -19,10 +21,22 @@ import javax.jms.Queue;
 @Configuration
 @EnableJms
 @Slf4j
-public class Config {
+public class Config implements WebMvcConfigurer {
     /**
      * 该消息队列的模板,默认时同步发送的方式
      */
     @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
+
+    @Autowired
+    private LoginInterceptor loginInterceptor;
+
+    @Override
+    public void  addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(loginInterceptor)
+                .excludePathPatterns("/user/login")
+                .excludePathPatterns("/user/logout")
+                .excludePathPatterns("/error");
+    }
+
 }

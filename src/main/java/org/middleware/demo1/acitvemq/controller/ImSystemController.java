@@ -36,6 +36,7 @@ public class ImSystemController {
     @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
 
+
     @GetMapping("/test")
     public Object send5Msg(){
         Queue queue = new ActiveMQQueue("queue");

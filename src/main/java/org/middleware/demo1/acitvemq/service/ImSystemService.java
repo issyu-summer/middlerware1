@@ -1,5 +1,6 @@
 package org.middleware.demo1.acitvemq.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -54,7 +55,6 @@ public class ImSystemService {
             //同时只进行一个通信；初步在消息中加入senderId
             String json=objectMapper.writeValueAsString( new MsgVo(msg,senderId));
             jmsMessagingTemplate.convertAndSend(new ActiveMQQueue("queue01"),json);
-
             writeLog(senderId, receiverId, null, type, msg);
         } catch (Exception e) {
             e.printStackTrace();
@@ -126,6 +126,8 @@ public class ImSystemService {
             fileService.save(
                     new org.middleware.demo1.acitvemq.entity.po.File()
                     .setPath(path).setUri(uri).setFileName(fileName));
+            QueryWrapper<File> queryWrapper=new QueryWrapper<>();
+
         } catch (Exception e) {
             e.printStackTrace();
             return false;

@@ -5,21 +5,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.io.Serializable;
-
 /**
- * @author yasuko-an
+ * @author summer
+ * @see <a href=""></a><br/>
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class FileVo implements Serializable {
-
-    private String fileName;
-
-    private byte[] file;
-
-    private Long senderId;
-
+public class StaffRetVo {
+    private Long userId;
+    private Integer type;
+    private String username;
 }
