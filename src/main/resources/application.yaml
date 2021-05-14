@@ -25,7 +25,6 @@ spring:
 
 #debug: true
 
-
 #需要解决queue和topic在同一个微服务无法同时使用的问题
 
 #前后端跨域访问
