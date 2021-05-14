@@ -6,6 +6,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.config.content.Type;
+import org.middleware.demo1.acitvemq.entity.po.Group;
+import org.middleware.demo1.acitvemq.entity.po.Record;
 import org.middleware.demo1.acitvemq.entity.vo.FileVo;
 import org.middleware.demo1.acitvemq.entity.vo.MsgVo;
 import org.middleware.demo1.acitvemq.entity.vo.RecordListRetVo;
@@ -18,6 +20,9 @@ import javax.jms.*;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +41,12 @@ public class ImSystemService {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private GroupService groupService;
+
+    @Autowired
+    private RecordService recordService;
 
     private List<Msg> msgReceiverRecordList;
     private HashMap<Long,Integer> msgReceiverRecordsOrderMap;
@@ -259,5 +270,11 @@ public class ImSystemService {
         }
 
         return topic;
+    }
+
+    public String testSQL(){
+        recordService.save(new Record().setContent("aaa").setDateTime(LocalDateTime.of(LocalDate.now(), LocalTime.now()))
+                .setReceiverId(1L).setSenderId(2L).setType(1));
+        return new String();
     }
 }

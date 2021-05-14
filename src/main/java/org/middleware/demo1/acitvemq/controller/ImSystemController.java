@@ -37,6 +37,12 @@ public class ImSystemController {
     private JmsMessagingTemplate jmsMessagingTemplate;
 
 
+    @GetMapping("/testsql")
+    public Object testSQL(){
+        service.testSQL();
+        return new Response<>();
+    }
+
     @GetMapping("/test")
     public Object send5Msg(){
         Queue queue = new ActiveMQQueue("queue");

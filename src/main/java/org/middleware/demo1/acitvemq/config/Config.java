@@ -31,12 +31,12 @@ public class Config implements WebMvcConfigurer {
     @Autowired
     private LoginInterceptor loginInterceptor;
 
-    @Override
-    public void  addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(loginInterceptor)
-                .excludePathPatterns("/user/login")
-                .excludePathPatterns("/user/logout")
-                .excludePathPatterns("/error");
-    }
+//    @Override
+//    public void  addInterceptors(InterceptorRegistry registry) {
+//        registry.addInterceptor(loginInterceptor)
+//                .excludePathPatterns("/user/login")
+//                .excludePathPatterns("/user/logout")
+//                .excludePathPatterns("/error");
+//    }
 
 }
