@@ -56,46 +56,40 @@ public class ImSystemService {
     private HashMap<String,ActiveMQQueue> queueMap;
     private HashMap<String,ActiveMQTopic> topicMap;
 
-    public boolean sendToSomebody(String msg, Long senderId, Long receiverId, Integer type, String fileName) throws JMSException {
-        if(senderId == null || receiverId == null || msg == null){
-            return false;
-        }
-
+    public boolean sendToSomebody(String msg, Long senderId, Long receiverId, Integer contentType){
         try {
             //1给2发,3给2发,队列名是否可以相同。
             //同时只进行一个通信；初步在消息中加入senderId
             String json=objectMapper.writeValueAsString( new MsgVo(msg,senderId));
             jmsMessagingTemplate.convertAndSend(new ActiveMQQueue("queue01"),json);
-            writeLog(senderId, receiverId, null, type, msg);
+            writeLog(senderId,receiverId,0,contentType,msg);//魔法值0代表私聊
         } catch (Exception e) {
             e.printStackTrace();
             //发消息到activeMq一定会成功,怎么能知道接收者是否消费了activeMq上的消息？
             //不知道
-            writeLog(senderId, receiverId, null, type, "FAILTOSEND");
+            writeLog(senderId,receiverId,null,contentType,"FAILTOSENDSOMEBODY:");//魔法值null代表发送失败
             return false;
         }
 
         return true;
     }
 
-    public boolean sendToGroup(String msg, Long senderId, Long groupId, Integer type, String fileName){
-
-        if(senderId == null || groupId == null || msg == null){
-            return false;
-        }
-
+    public boolean sendToGroup(String msg, Long senderId, Long receiverId, Integer contentType){
         try {
             String json=objectMapper.writeValueAsString( new MsgVo(msg,senderId));
 
             jmsMessagingTemplate.convertAndSend(new ActiveMQTopic("topic01"), json);
-
-            writeLog(senderId, null, groupId, type, msg);
+            writeLog(senderId,receiverId,1,contentType,msg);//魔法值1代表群聊
         } catch (Exception e) {
-            writeLog(senderId, null, groupId, type, "FAILETOSEND");
+            writeLog(senderId,receiverId,null,contentType,"FAILTOSENDTOGROUP:");//魔法值null代表发送失败
             return false;
         }
-
         return true;
+    }
+
+    public void writeLog(Long senderId, Long receiverId, Integer type, Integer contentType,String msg){
+        recordService.save(new Record().setSenderId(senderId).setReceiverId(receiverId).setType(type).setContentType(contentType)
+                .setContent(msg).setDateTime(LocalDateTime.of(LocalDate.now(), LocalTime.now())));
     }
 
     public boolean sendFile(Long senderId, Long receiverId, String fileName, byte[] file) {
@@ -145,45 +139,6 @@ public class ImSystemService {
         }
 
         return true;
-    }
-
-    public void writeLog(Long senderId, Long receiverId, Long groupId, Integer type, String msg){
-        if(msgReceiverRecordList == null){
-            msgReceiverRecordList = new LinkedList<>();
-        }
-        if(msgReceiverRecordsOrderMap == null){
-            msgReceiverRecordsOrderMap = new HashMap<>();
-        }
-        if(msgGroupRecordList == null){
-            msgGroupRecordList = new LinkedList<>();
-        }
-        if(msgGroupRecordsOrderMap == null){
-            msgGroupRecordsOrderMap = new HashMap<>();
-        }
-
-        if(receiverId !=null){
-            Long id = (long) msgReceiverRecordList.size();
-            Integer orderId = msgReceiverRecordsOrderMap.get(receiverId);
-            if(orderId == null){
-                orderId = 0;
-                msgReceiverRecordsOrderMap.put(receiverId,orderId);
-            }else{
-                orderId += 1;
-                msgReceiverRecordsOrderMap.put(receiverId,orderId);
-            }
-            msgReceiverRecordList.add(new Msg().setId(id).setType(Type.getEnum(type)).setContent(msg).setReceiverId(receiverId).setSenderId(senderId).setOrder(orderId));
-        } else{
-            Long id = (long) msgGroupRecordList.size();
-            Integer orderId = msgGroupRecordsOrderMap.get(groupId);
-            if(orderId == null){
-                orderId = 0;
-                msgGroupRecordsOrderMap.put(groupId,orderId);
-            }else{
-                orderId += 1;
-                msgGroupRecordsOrderMap.put(groupId,orderId);
-            }
-            msgGroupRecordList.add(new Msg().setId(id).setType(Type.getEnum(type)).setContent(msg).setSenderId(senderId).setGruopId(groupId).setOrder(orderId));
-        }
     }
 
     public RecordListRetVo getRecord(Integer nums, Integer orders, Long senderId,Long receiverId, Long groupId){

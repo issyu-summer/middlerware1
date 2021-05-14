@@ -36,4 +36,6 @@ public class Record {
     private Long receiverId;
     @TableField("sender_id")
     private Long senderId;
+    @TableField("content_type")
+    private Integer contentType;
 }

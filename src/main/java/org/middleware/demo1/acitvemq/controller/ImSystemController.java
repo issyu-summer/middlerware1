@@ -93,28 +93,33 @@ public class ImSystemController {
         return new Response<>().setCode(0).setMsg("OK").setData(chatLog);
     }
 
+    /**
+     * 发送聊天接口
+     * @modify qqpet24
+     * @param msg 消息，如果聊天内容类型是0代表普通聊天记录，如果是1代表文件记录
+     * @param senderId 发送者ID,必须在user表中中存在
+     * @param receiverId 被选择者ID(这个可能是群聊也可能是一对一聊,如果type为0代表userId如果type为1代表groupId)，但是receiverId没有校验是否真的存在
+     * @param type 聊天类型,如果是0,就是一对一聊天,如果是1就是群聊
+     * @param contentType 聊天内容类型,如果是0代表普通文字聊天记录，1代表文件
+     * @return code0 400 500
+     */
     @GetMapping("/send")
     public Object send(@RequestParam String msg,
                        @RequestParam Long senderId,
-                       @RequestParam(required = false) Long receiverId,
+                       @RequestParam Long receiverId,
                        @RequestParam Integer type,
-                       @RequestParam(required = false) String fileName,
-                       @RequestParam(required = false) Long groupId) throws JMSException {
-        boolean result;
-
-        if(receiverId != null) {
-            result = service.sendToSomebody(msg, senderId, receiverId, type, fileName);
+                       @RequestParam Integer contentType){
+        try{
+            if(type == 0 && (contentType == 0 || contentType == 1 )){
+                return new Response<>().setCode(0).setMsg("OK").setData(service.sendToSomebody(msg, senderId, receiverId, contentType));
+            }else if(type == 1 && (contentType == 0 || contentType == 1 )){
+                return new Response<>().setCode(0).setMsg("OK").setData(service.sendToGroup(msg, senderId,receiverId, contentType));
+            }else{
+                return new Response<>().setCode(400).setMsg("type和contentType必须是0或者1");
+            }
+        }catch (Exception e){
+            return new Response<>().setCode(500).setMsg(e.getMessage());
         }
-
-        else if(groupId != null) {
-            result = service.sendToGroup(msg, senderId, groupId, type, fileName);
-        }
-        else {
-            return new Response<>().setCode(400).setMsg("接收方为空");
-        }
-
-        //true or false
-        return new Response<>().setCode(0).setMsg("OK").setData(result);
     }
 
 
