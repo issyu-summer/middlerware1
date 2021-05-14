@@ -1,5 +1,6 @@
 package org.middleware.demo1.acitvemq.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.middleware.demo1.acitvemq.config.Response;
 import org.middleware.demo1.acitvemq.config.content.Content;
@@ -85,10 +86,10 @@ public class ImSystemController {
     public Object userInfo(@RequestParam Long senderId, @RequestParam Long userId){
         List<Msg> chatLog = new ArrayList<>();
 
-        if(senderId.equals(1L) && userId.equals(2L)){
-            chatLog.add(Content.msg3);
-            chatLog.add(Content.msg4);
-        }
+//        if(senderId.equals(1L) && userId.equals(2L)){
+//            chatLog.add(Content.msg3);
+//            chatLog.add(Content.msg4);
+//        }
 
         return new Response<>().setCode(0).setMsg("OK").setData(chatLog);
     }
@@ -122,6 +123,32 @@ public class ImSystemController {
         }
     }
 
+    /**
+     * @author qqpet24
+     * @param nums 聊天记录条数限制,默认10条
+     * @param orders 聊天记录顺序,如果orders为1,nums为3,意思是从聊天记录中的第二条数据开始最多返回3条聊天记录,默认从0开始
+     * @param senderId 发送人ID，但是senderId没有校验是否真的存在
+     * @param receiverId 被选择者ID(这个可能是群聊也可能是一对一聊,如果type为0代表userId如果type为1代表groupId)，但是receiverId没有校验是否真的存在
+     * @param type 聊天类型,如果是0,就是一对一聊天,如果是1就是群聊
+     * @param contentType 可选，筛选聊天内容类型,如果是0代表普通文字聊天记录，1代表文件,不写符合条件全部返回
+     * @return Record
+     */
+    @GetMapping("/record")
+    public Object record(@RequestParam(required = false,defaultValue = "10") Integer nums,
+                         @RequestParam(required = false,defaultValue = "0") Integer orders,
+                         @RequestParam Long senderId,
+                         @RequestParam Long receiverId,
+                         @RequestParam Integer type,
+                         @RequestParam(required = false)  Integer contentType){
+        try{
+            if((type!=0 && type!=1) || (contentType!=null && contentType != 0 && contentType != 1)){
+                return new Response<>().setCode(400).setData("请求的contentType和type必须为0或者1中的一个整数");
+            }
+            return new Response<>().setCode(0).setData("成功").setData(service.getRecord(nums,orders,type,contentType,senderId,receiverId));
+        }catch (Exception e){
+            return new Response<>().setCode(500).setData(e.getMessage());
+        }
+    }
 
 
     /**
@@ -169,31 +196,6 @@ public class ImSystemController {
 
     //发送文件和存储转发的流程：A调用/fileSave--->/send----->B收到了消息------->/downLoad
 
-    /**
-     * @author qqpet24
-     * @param nums 聊天记录条数限制,默认10条
-     * @param orders 聊天记录顺序,如果orders为1,nums为3,意思是从聊天记录中的第二条数据开始最多返回3条聊天记录,默认从0开始
-     * @param senderId 发送人ID
-     * @param receiverId 接收人ID,意味着是一对一聊天
-     * @param groupId 群ID,意味着是群聊,groupId和receiverId有且仅有一个
-     * @return Record
-     */
-
-    @GetMapping("/record")
-    public Object record(@RequestParam(required = false,defaultValue = "10") Integer nums,
-                         @RequestParam(required = false,defaultValue = "0") Integer orders,
-                         @RequestParam Long senderId,
-                         @RequestParam(required = false) Long receiverId,
-                         @RequestParam(required = false) Long groupId){
-        try{
-            if((receiverId == null && groupId == null ) || (receiverId != null && groupId != null)){
-                return new Response<>().setCode(400).setData("请求的receiverId和groupId必须有且仅有一个");
-            }
-            return new Response<>().setCode(0).setData("成功").setData(service.getRecord(nums,orders,senderId,receiverId,groupId));
-        }catch (Exception e){
-            return new Response<>().setCode(500).setData(e.getMessage());
-        }
-    }
 
     @GetMapping("/groups")
     public Object getGroups(@RequestParam Long userId) {
@@ -215,11 +217,11 @@ public class ImSystemController {
 
     @GetMapping("/members")
     public Object getGroupMembers(@RequestParam Long groupId) {
-        if(groupId.equals(1L)) {
-            return new Response<>().setMsg("OK").setCode(200).setData(group1.getUserList());
-        } else if(groupId.equals(2L)) {
-            return new Response<>().setMsg("OK").setCode(200).setData(group2.getUserList());
-        }
+//        if(groupId.equals(1L)) {
+//            return new Response<>().setMsg("OK").setCode(200).setData(group1.getUserList());
+//        } else if(groupId.equals(2L)) {
+//            return new Response<>().setMsg("OK").setCode(200).setData(group2.getUserList());
+//        }
 
         return new Response<>().setCode(400).setMsg("群不存在");
     }

@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,9 +32,14 @@ public class Msg {
     private String content;
 
     /**
+     * 0-私聊 1群聊
+     */
+    private Integer type;
+
+    /**
      * 0-text  1-file
      */
-    private Type type;
+    private Integer contentType;
 
     /**
      * 发送者
@@ -45,8 +52,8 @@ public class Msg {
     private Long receiverId;
 
     /**
-     * 群消息-群ID
+     * 消息发送的时间
      */
-    private Long gruopId;
+    private String dateTime;
 
 }

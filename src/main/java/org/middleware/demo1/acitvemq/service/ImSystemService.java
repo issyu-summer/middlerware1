@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.config.content.Type;
 import org.middleware.demo1.acitvemq.entity.po.Group;
@@ -11,6 +13,7 @@ import org.middleware.demo1.acitvemq.entity.po.Record;
 import org.middleware.demo1.acitvemq.entity.vo.FileVo;
 import org.middleware.demo1.acitvemq.entity.vo.MsgVo;
 import org.middleware.demo1.acitvemq.entity.vo.RecordListRetVo;
+import org.middleware.demo1.acitvemq.mapper.RecordMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -47,6 +50,9 @@ public class ImSystemService {
 
     @Autowired
     private RecordService recordService;
+
+    @Autowired
+    private RecordMapper recordMapper;
 
     private List<Msg> msgReceiverRecordList;
     private HashMap<Long,Integer> msgReceiverRecordsOrderMap;
@@ -141,50 +147,33 @@ public class ImSystemService {
         return true;
     }
 
-    public RecordListRetVo getRecord(Integer nums, Integer orders, Long senderId,Long receiverId, Long groupId){
-        if(msgReceiverRecordList == null){
-            msgReceiverRecordList = new LinkedList<>();
+    public RecordListRetVo getRecord(Integer nums, Integer orders, Integer type,Integer contentType,Long senderId,Long receiverId){
+        QueryWrapper<Record> queryWrapper= new QueryWrapper<>();
+        queryWrapper.eq("sender_id",senderId);
+        queryWrapper.eq("receiver_id",receiverId);
+        queryWrapper.eq("type",type);
+        if(contentType!=null){
+            queryWrapper.eq("content_type",contentType);
         }
-        if(msgGroupRecordList == null){
-            msgGroupRecordList = new LinkedList<>();
+        if(nums != null && orders == null){
+            queryWrapper.last("limit "+nums.toString());
+        }else if(nums == null && orders != null){
+            queryWrapper.last("limit "+orders.toString()+","+"-1");
+        }else if(nums !=null && orders != null){
+            queryWrapper.last("limit "+orders.toString()+","+nums.toString());
         }
+
+        List<Record> records = recordMapper.selectList(queryWrapper);
         RecordListRetVo recordListRetVo = new RecordListRetVo();
-        recordListRetVo.setMsgs(new LinkedList<>());
+        recordListRetVo.setMsgs(new LinkedList<>()).setOrders(orders).setNums(nums).setReceiverId(receiverId).setSenderId(senderId)
+        .setContentType(contentType).setType(type);
 
-        if(receiverId != null){
-            recordListRetVo.setReceiverId(receiverId).setSenderId(senderId).setNums(nums).setOrders(orders);
-
-            int tmpOrder = 0;
-            for(Msg tmpMsg : msgReceiverRecordList){
-                if((tmpMsg.getSenderId().equals(senderId) && tmpMsg.getReceiverId().equals(receiverId)) ||
-                        (tmpMsg.getSenderId().equals(receiverId) && tmpMsg.getReceiverId().equals(senderId))){
-                    recordListRetVo.getMsgs().add(tmpMsg);
-                    tmpOrder++;
-                }
-//                if(tmpMsg.getSenderId().equals(senderId)){
-//                    if(tmpMsg.getReceiverId().equals(receiverId)){
-//                        if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
-//                            recordListRetVo.getMsgs().add(tmpMsg);
-//                        }
-//                        tmpOrder++;
-//                    }
-//                }
-            }
-            return recordListRetVo;
-        }else{
-            recordListRetVo.setGroupId(groupId).setSenderId(senderId).setNums(nums).setOrders(orders);
-
-            int tmpOrder = 0;
-            for(Msg tmpMsg : msgGroupRecordList){
-                if(tmpMsg.getGruopId() != null && tmpMsg.getGruopId().equals(groupId)) {
-                    if(tmpOrder >= orders && recordListRetVo.getMsgs().size() < nums ){
-                        recordListRetVo.getMsgs().add(tmpMsg);
-                    }
-                    tmpOrder++;
-                }
-            }
-            return recordListRetVo;
+        Integer tmpOrder = 0;
+        for(Record record : records){
+            recordListRetVo.getMsgs().add(new Msg().setOrder(tmpOrder++).setSenderId(record.getSenderId()).setReceiverId(record.getReceiverId())
+            .setContent(record.getContent()).setType(record.getType()).setContentType(record.getContentType()).setDateTime(record.getDateTime().toString()).setId(record.getId()));
         }
+        return recordListRetVo;
     }
 
     public String getFile(String fileName){

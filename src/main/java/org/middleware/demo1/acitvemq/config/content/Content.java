@@ -94,81 +94,81 @@ public class Content {
 
 
     /* ***********************************以下将模拟n个消息、请在使用的时候自行添加*********************************** */
-    /**
-     * 模拟消息1,用户1发送给到群1（msg:你吃饭了吗？）****中文测试****
-     */
-    public static Msg msg1
-            = new Msg()
-            .setId(1L).setContent("你们吃饭了吗？").setOrder(1)
-            .setType(Type.TEXT).setSenderId(1L);
-
-    /**
-     * 模拟消息2,用户1发送给群1（msg:can you speak English ？）****英文测试****
-     */
-    public static Msg msg2
-            = new Msg()
-            .setId(1L).setContent("can you speak English ？").setOrder(1)
-            .setType(Type.TEXT).setSenderId(1L);
-
-    /**
-     * 模拟消息3,用户1发送给用户2（msg:你好）****中文测试****
-     */
-    public static Msg msg3
-            = new Msg()
-            .setId(3L).setContent("你好").setOrder(1)
-            .setType(Type.TEXT).setSenderId(1L).setReceiverId(2L);
-
-    /**
-     * 模拟消息4,用户1发送给用户2（msg:hello!）****英文测试****
-     */
-    public static Msg msg4
-            = new Msg()
-            .setId(4L).setContent("hello!").setOrder(2)
-            .setType(Type.TEXT).setSenderId(1L).setReceiverId(2L);
+//    /**
+//     * 模拟消息1,用户1发送给到群1（msg:你吃饭了吗？）****中文测试****
+//     */
+//    public static Msg msg1
+//            = new Msg()
+//            .setId(1L).setContent("你们吃饭了吗？").setOrder(1)
+//            .setType(Type.TEXT).setSenderId(1L);
+//
+//    /**
+//     * 模拟消息2,用户1发送给群1（msg:can you speak English ？）****英文测试****
+//     */
+//    public static Msg msg2
+//            = new Msg()
+//            .setId(1L).setContent("can you speak English ？").setOrder(1)
+//            .setType(Type.TEXT).setSenderId(1L);
+//
+//    /**
+//     * 模拟消息3,用户1发送给用户2（msg:你好）****中文测试****
+//     */
+//    public static Msg msg3
+//            = new Msg()
+//            .setId(3L).setContent("你好").setOrder(1)
+//            .setType(Type.TEXT).setSenderId(1L).setReceiverId(2L);
+//
+//    /**
+//     * 模拟消息4,用户1发送给用户2（msg:hello!）****英文测试****
+//     */
+//    public static Msg msg4
+//            = new Msg()
+//            .setId(4L).setContent("hello!").setOrder(2)
+//            .setType(Type.TEXT).setSenderId(1L).setReceiverId(2L);
     /* ***********************************以上将模拟n个消息、请在使用的时候自行添加*********************************** */
 
 
     /* ***********************************以下将模拟n个群消息记录、请在使用的时候自行添加*********************************** */
-    /**
-     * 群1的模拟消息记录
-     */
-    public static List<Msg> groupMsg1
-            =Arrays.asList(msg1,msg2);
-
-    /**
-     * 群2的模拟消息记录,请自行添加
-     */
-    public static List<Msg> groupMsg2;
-
-    /**
-     * 私聊1的记录
-     */
-    public static List<Msg> friendsMsg1;
-    /* ***********************************以上将模拟n个群消息记录、请在使用的时候自行添加*********************************** */
-
-
-    /* ***********************************以下将模拟2个群*********************************** */
-    /**
-     * 模拟群1
-     */
-    public static Group group1
-            =new Group()
-            .setId(1L).setName("group1")
-            .setUserList(list1)
-            .setGroupMsg(groupMsg1);
-    /**
-     * 模拟群2
-     */
-    public static Group group2
-            =new Group()
-            .setId(2L).setName("group2")
-            .setUserList(list2)
-            .setGroupMsg(groupMsg2);
-    /* ***********************************以上将模拟2个群*********************************** */
-
-
-
-
+//    /**
+//     * 群1的模拟消息记录
+//     */
+//    public static List<Msg> groupMsg1
+//            =Arrays.asList(msg1,msg2);
+//
+//    /**
+//     * 群2的模拟消息记录,请自行添加
+//     */
+//    public static List<Msg> groupMsg2;
+//
+//    /**
+//     * 私聊1的记录
+//     */
+//    public static List<Msg> friendsMsg1;
+//    /* ***********************************以上将模拟n个群消息记录、请在使用的时候自行添加*********************************** */
+//
+//
+//    /* ***********************************以下将模拟2个群*********************************** */
+//    /**
+//     * 模拟群1
+//     */
+//    public static Group group1
+//            =new Group()
+//            .setId(1L).setName("group1")
+//            .setUserList(list1)
+//            .setGroupMsg(groupMsg1);
+//    /**
+//     * 模拟群2
+//     */
+//    public static Group group2
+//            =new Group()
+//            .setId(2L).setName("group2")
+//            .setUserList(list2)
+//            .setGroupMsg(groupMsg2);
+//    /* ***********************************以上将模拟2个群*********************************** */
+//
+//
+//
+//
 
 
 

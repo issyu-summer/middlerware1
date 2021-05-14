@@ -22,7 +22,9 @@ public class RecordListRetVo {
 
     private Long senderId;
 
-    private Long groupId;
+    private Integer type;
+
+    private Integer contentType;
 
     private Integer nums;
 
