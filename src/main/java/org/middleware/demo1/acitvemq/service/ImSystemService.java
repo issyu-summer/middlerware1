@@ -10,10 +10,16 @@ import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.config.content.Type;
 import org.middleware.demo1.acitvemq.entity.po.Group;
 import org.middleware.demo1.acitvemq.entity.po.Record;
+import org.middleware.demo1.acitvemq.entity.po.User;
+import org.middleware.demo1.acitvemq.entity.po.UserShop;
 import org.middleware.demo1.acitvemq.entity.vo.FileVo;
 import org.middleware.demo1.acitvemq.entity.vo.MsgVo;
 import org.middleware.demo1.acitvemq.entity.vo.RecordListRetVo;
+import org.middleware.demo1.acitvemq.entity.vo.ShopListRetVo;
+import org.middleware.demo1.acitvemq.mapper.FileMapper;
 import org.middleware.demo1.acitvemq.mapper.RecordMapper;
+import org.middleware.demo1.acitvemq.mapper.UserMapper;
+import org.middleware.demo1.acitvemq.mapper.UserShopMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -46,7 +52,22 @@ public class ImSystemService {
     private FileService fileService;
 
     @Autowired
+    private FileMapper fileMapper;
+
+    @Autowired
     private GroupService groupService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private UserShopService userShopService;
+
+    @Autowired
+    private UserShopMapper userShopMapper;
 
     @Autowired
     private RecordService recordService;
@@ -128,12 +149,9 @@ public class ImSystemService {
             bos.write(file.getBytes());
             bos.close();
 
-            if(fileSaveMap == null){
-                fileSaveMap = new HashMap<>();
-            }
             String uri="http://localhost:9000/"+file.getOriginalFilename();
             String fileName=file.getOriginalFilename();
-            fileSaveMap.put(fileName,uri);
+
             fileService.save(
                     new org.middleware.demo1.acitvemq.entity.po.File()
                     .setPath(path).setUri(uri).setFileName(fileName));
@@ -177,11 +195,15 @@ public class ImSystemService {
     }
 
     public String getFile(String fileName){
-        if(fileSaveMap == null){
-            return null;
-        }else{
-            return fileSaveMap.get(fileName);
+        QueryWrapper<org.middleware.demo1.acitvemq.entity.po.File> queryWrapper= new QueryWrapper<>();
+        queryWrapper.eq("file_name",fileName);
+        List<org.middleware.demo1.acitvemq.entity.po.File> files = fileMapper.selectList(queryWrapper);
+        for(org.middleware.demo1.acitvemq.entity.po.File file : files){
+            if(file.getFileName()!=null){
+                return "/"+file.getFileName();
+            }
         }
+        return null;
     }
 
     private ActiveMQQueue getQueue(String queueName) {
@@ -216,9 +238,37 @@ public class ImSystemService {
         return topic;
     }
 
-    public String testSQL(){
-        recordService.save(new Record().setContent("aaa").setDateTime(LocalDateTime.of(LocalDate.now(), LocalTime.now()))
-                .setReceiverId(1L).setSenderId(2L).setType(1));
-        return new String();
+    public boolean addShop(Long userId,Long shopUserId){
+        User user = userService.getById(userId);
+        User shop = userService.getById(shopUserId);
+        if(user==null || shop==null || user.getType()!=3 || shop.getType()!=4 ){
+            return false;
+        }
+        userShopService.save(new UserShop().setShopUserId(shopUserId).setUserId(userId));
+        return true;
+    }
+
+    public ShopListRetVo getAllShop(){
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("type",4);
+        List<User> users = userMapper.selectList(queryWrapper);
+        ShopListRetVo shopListRetVo = new ShopListRetVo();
+        shopListRetVo.setShopUserIdList(new LinkedList<>());
+        for(User user : users){
+            shopListRetVo.getShopUserIdList().add(user.getId());
+        }
+        return shopListRetVo;
+    }
+
+    public ShopListRetVo getUserShop(Long userId){
+        QueryWrapper<UserShop> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id",userId);
+        List<UserShop> userShops = userShopMapper.selectList(queryWrapper);
+        ShopListRetVo shopListRetVo = new ShopListRetVo();
+        shopListRetVo.setShopUserIdList(new LinkedList<>());
+        for(UserShop userShop : userShops){
+            shopListRetVo.getShopUserIdList().add(userShop.getId());
+        }
+        return shopListRetVo;
     }
 }

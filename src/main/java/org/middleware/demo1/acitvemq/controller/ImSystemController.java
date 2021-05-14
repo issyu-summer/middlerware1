@@ -37,13 +37,9 @@ public class ImSystemController {
     @Autowired
     private JmsMessagingTemplate jmsMessagingTemplate;
 
-
-    @GetMapping("/testsql")
-    public Object testSQL(){
-        service.testSQL();
-        return new Response<>();
-    }
-
+    /**
+     * 测试接口
+     */
     @GetMapping("/test")
     public Object send5Msg(){
         Queue queue = new ActiveMQQueue("queue");
@@ -71,7 +67,7 @@ public class ImSystemController {
         if(userId==3L){
             friendList.setUserId(user3.getId()).setFriends(friendList3).setUsername(user3.getName());
         }
-        return new Response<>().setCode(0).setMsg("Ok").setData(friendList);
+        return new Response<>().setCode(0).setMsg("OK").setData(friendList);
     }
 
 
@@ -93,7 +89,67 @@ public class ImSystemController {
 
         return new Response<>().setCode(0).setMsg("OK").setData(chatLog);
     }
-
+    /**
+     * @author qqpet24
+     * 获取当前所有shop列表
+     */
+    @GetMapping("shop/all")
+    public Object getAllShop(){
+        try{
+            return new Response<>().setCode(0).setMsg("OK").setData(service.getAllShop());
+        }catch (Exception e){
+            return new Response<>().setCode(500).setMsg(e.getMessage());
+        }
+    }
+    /**
+     * @author qqpet24
+     * 增加用户对应的shop,类似于QQ加好友，加的是店家,userId和shopUserId联合唯一索引,userId和shopUserId必须存在,否则报400错,如果添加不唯一记录报500错
+     */
+    @GetMapping("user/addshop")
+    public Object addShop(@RequestParam Long userId,
+                          @RequestParam Long shopUserId){
+        try{
+            if(service.addShop(userId,shopUserId)){
+                return new Response<>().setCode(0).setMsg("OK");
+            }else {
+                return new Response<>().setCode(400).setMsg("userId或者shopUserId中一个为空或者userId对应user不为普通用户类型(代号3)或者shopUserId对应user不为普通商家类型(代号4)");
+            }
+        }catch (Exception e){
+            return new Response<>().setCode(500).setMsg(e.getMessage());
+        }
+    }
+    /**
+     * @author qqpet24
+     * 查找用户对应shop,对于传入userId没有进行校验有效性
+     */
+    @GetMapping("user/getshop")
+    public Object getShop(@RequestParam Long userId){
+        try{
+            return new Response<>().setCode(0).setMsg("OK").setData(service.getUserShop(userId));
+        }catch (Exception e){
+            return new Response<>().setCode(500).setMsg(e.getMessage());
+        }
+    }
+//    /**
+//     * 成立group,随机分配一个可分配客服，如果没有，返回繁忙，如果有建立群
+//     */
+//    @GetMapping("group/found")
+//    public Object foundGroup(@RequestParam Long userId,
+//                               @RequestParam Long shopId){
+//    }
+//    /**
+//     * 查找用户对应的group
+//     */
+//    @GetMapping("group/search")
+//    public Object searchGroup(@RequestParam Long userId){
+//    }
+//    /**
+//     * 查找group对应的members
+//     */
+//    @GetMapping("group/members")
+//    public Object getGroupMember(@RequestParam Long userId,
+//                             @RequestParam Long groupId){
+//    }
     /**
      * 发送聊天接口
      * @modify qqpet24
@@ -124,6 +180,7 @@ public class ImSystemController {
     }
 
     /**
+     * 查找聊天记录接口
      * @author qqpet24
      * @param nums 聊天记录条数限制,默认10条
      * @param orders 聊天记录顺序,如果orders为1,nums为3,意思是从聊天记录中的第二条数据开始最多返回3条聊天记录,默认从0开始
@@ -149,7 +206,6 @@ public class ImSystemController {
             return new Response<>().setCode(500).setData(e.getMessage());
         }
     }
-
 
     /**
      * 存储转发
@@ -179,7 +235,7 @@ public class ImSystemController {
     }
 
     /**
-     * 下载,输入对应文件名,获取相对文件路径,如输入a.txt获取到/a.txt。必须先调用fileSave接口成功,文件才会被记录
+     * 下载,输入对应文件名,获取相对文件路径,如输入a.txt获取到/a.txt。
      * @author qqpet24
      * @param fileName
      * @return
