@@ -52,44 +52,6 @@ public class ImSystemController {
     }
 
     /**
-     * @param userId  发起聊天的人
-     * @return userList
-     */
-    @GetMapping("/userList")
-    public Object getUserList(@RequestParam("userId")  Long userId){
-        FriendListRetVo friendList=new FriendListRetVo();
-        if(userId==1L){
-            friendList.setUserId(user1.getId()).setFriends(friendList1).setUsername(user1.getName());
-        }
-        if(userId==2L){
-            friendList.setUserId(user2.getId()).setFriends(friendList2).setUsername(user2.getName());
-        }
-        if(userId==3L){
-            friendList.setUserId(user3.getId()).setFriends(friendList3).setUsername(user3.getName());
-        }
-        return new Response<>().setCode(0).setMsg("OK").setData(friendList);
-    }
-
-
-
-    /**
-     *
-     * @param senderId 发送者ID
-     * @param userId 被选择者ID
-     * @return [聊天记录]
-     */
-    @GetMapping("/user")
-    public Object userInfo(@RequestParam Long senderId, @RequestParam Long userId){
-        List<Msg> chatLog = new ArrayList<>();
-
-//        if(senderId.equals(1L) && userId.equals(2L)){
-//            chatLog.add(Content.msg3);
-//            chatLog.add(Content.msg4);
-//        }
-
-        return new Response<>().setCode(0).setMsg("OK").setData(chatLog);
-    }
-    /**
      * @author qqpet24
      * 获取当前所有shop列表
      */
@@ -101,6 +63,7 @@ public class ImSystemController {
             return new Response<>().setCode(500).setMsg(e.getMessage());
         }
     }
+
     /**
      * @author qqpet24
      * 增加用户对应的shop,类似于QQ加好友，加的是店家,userId和shopUserId联合唯一索引,userId和shopUserId必须存在,否则报400错,如果添加不唯一记录报500错
@@ -118,6 +81,7 @@ public class ImSystemController {
             return new Response<>().setCode(500).setMsg(e.getMessage());
         }
     }
+
     /**
      * @author qqpet24
      * 查找用户对应shop,对于传入userId没有进行校验有效性
@@ -130,26 +94,50 @@ public class ImSystemController {
             return new Response<>().setCode(500).setMsg(e.getMessage());
         }
     }
-//    /**
-//     * 成立group,随机分配一个可分配客服，如果没有，返回繁忙，如果有建立群
-//     */
-//    @GetMapping("group/found")
-//    public Object foundGroup(@RequestParam Long userId,
-//                               @RequestParam Long shopId){
-//    }
-//    /**
-//     * 查找用户对应的group
-//     */
-//    @GetMapping("group/search")
-//    public Object searchGroup(@RequestParam Long userId){
-//    }
-//    /**
-//     * 查找group对应的members
-//     */
-//    @GetMapping("group/members")
-//    public Object getGroupMember(@RequestParam Long userId,
-//                             @RequestParam Long groupId){
-//    }
+
+    /**
+     * @author qqpet24
+     * 成立group,随机分配一个可分配的admin客服，如果没有，返回503，如果有建立群,并且拉user、shopUser、admin三个人进群
+     * userId和shopId必须有效且用户类型正确，否则报400
+     * admin客服被分配后,除非调用/user/restore接口,否则不能再次分配
+     */
+    @GetMapping("group/found")
+    public Object foundGroup(@RequestParam Long userId,
+                             @RequestParam Long shopId,
+                             @RequestParam String groupName){
+        try{
+            return service.foundGroup(userId,shopId,groupName);
+        }catch (Exception e){
+            return new Response<>().setCode(500).setMsg(e.getMessage());
+        }
+    }
+
+    /**
+     * @author qqpet24
+     * 查找用户对应的group,userId代表任意类型user,但是必须存在,否则报400
+     */
+    @GetMapping("group/search")
+    public Object searchGroup(@RequestParam Long userId){
+        try{
+            return service.searchUserGroup(userId);
+        }catch (Exception e){
+            return new Response<>().setCode(500).setMsg(e.getMessage());
+        }
+    }
+
+    /**
+     * @author qqpet24
+     * 查找group对应的members,groupId必须存在,否则报400
+     */
+    @GetMapping("group/members")
+    public Object getGroupMember(@RequestParam Long groupId){
+        try{
+            return service.getGroupMember(groupId);
+        }catch (Exception e){
+            return new Response<>().setCode(500).setMsg(e.getMessage());
+        }
+    }
+
     /**
      * 发送聊天接口
      * @modify qqpet24
@@ -228,8 +216,6 @@ public class ImSystemController {
             return new Response<>().setCode(400).setMsg("内部错误");
         }
 
-        //todo （进度条？）
-
         //true of false
         return new Response<>().setCode(0).setData("成功").setData(result);
     }
@@ -251,36 +237,4 @@ public class ImSystemController {
     }
 
     //发送文件和存储转发的流程：A调用/fileSave--->/send----->B收到了消息------->/downLoad
-
-
-    @GetMapping("/groups")
-    public Object getGroups(@RequestParam Long userId) {
-        List<GroupVo> groups = new ArrayList<>();
-
-        for(User user:list1) {
-            if(user.getId().equals(userId)) {
-                groups.add(new GroupVo(1L, "group1"));
-            }
-        }
-        for(User user:list2) {
-            if(user.getId().equals(userId)) {
-                groups.add(new GroupVo(2L, "group2"));
-            }
-        }
-
-        return new Response<>().setMsg("OK").setCode(200).setData(groups);
-    }
-
-    @GetMapping("/members")
-    public Object getGroupMembers(@RequestParam Long groupId) {
-//        if(groupId.equals(1L)) {
-//            return new Response<>().setMsg("OK").setCode(200).setData(group1.getUserList());
-//        } else if(groupId.equals(2L)) {
-//            return new Response<>().setMsg("OK").setCode(200).setData(group2.getUserList());
-//        }
-
-        return new Response<>().setCode(400).setMsg("群不存在");
-    }
-
-
 }

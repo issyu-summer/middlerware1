@@ -98,14 +98,22 @@ public class UserController {
 
     /**
      * 恢复客服的身份、以便再次利用
-     * @param username staff name
+     * @author summer
+     * @modify qqpet24
+     * @param userId 用户Id,必须是已分配客服
      */
     @PutMapping("restore")
-    public Object restore(@RequestParam String username){
+    public Object restore(@RequestParam Long userId){
         User user
-                = userService.getOne(new QueryWrapper<User>().eq("username",username));
+                = userService.getOne(new QueryWrapper<User>().eq("id",userId));
+        if(user == null){
+            return new Response<>().setCode(400).setMsg("该用户不存在");
+        }
+        if(user.getType()!=1){
+            return new Response<>().setCode(400).setMsg("该用户不是客服或者该客服空闲");
+        }
         user.setType(2);
-        userService.updateById(user.setOnline(0));
+        userService.updateById(user); //改动了设置online为0的地方客服重新分配不代表不在线
         return new Response<>().setCode(0).setMsg("OK");
     }
 

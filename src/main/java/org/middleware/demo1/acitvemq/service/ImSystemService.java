@@ -6,23 +6,17 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.middleware.demo1.acitvemq.config.Response;
 import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.config.content.Type;
-import org.middleware.demo1.acitvemq.entity.po.Group;
+import org.middleware.demo1.acitvemq.entity.po.*;
 import org.middleware.demo1.acitvemq.entity.po.Record;
-import org.middleware.demo1.acitvemq.entity.po.User;
-import org.middleware.demo1.acitvemq.entity.po.UserShop;
-import org.middleware.demo1.acitvemq.entity.vo.FileVo;
-import org.middleware.demo1.acitvemq.entity.vo.MsgVo;
-import org.middleware.demo1.acitvemq.entity.vo.RecordListRetVo;
-import org.middleware.demo1.acitvemq.entity.vo.ShopListRetVo;
-import org.middleware.demo1.acitvemq.mapper.FileMapper;
-import org.middleware.demo1.acitvemq.mapper.RecordMapper;
-import org.middleware.demo1.acitvemq.mapper.UserMapper;
-import org.middleware.demo1.acitvemq.mapper.UserShopMapper;
+import org.middleware.demo1.acitvemq.entity.vo.*;
+import org.middleware.demo1.acitvemq.mapper.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.jms.*;
@@ -75,11 +69,12 @@ public class ImSystemService {
     @Autowired
     private RecordMapper recordMapper;
 
-    private List<Msg> msgReceiverRecordList;
-    private HashMap<Long,Integer> msgReceiverRecordsOrderMap;
-    private List<Msg> msgGroupRecordList;
-    private HashMap<Long,Integer> msgGroupRecordsOrderMap;
-    private HashMap<String,String> fileSaveMap;
+    @Autowired
+    private  UserGroupService userGroupService;
+
+    @Autowired
+    private UserGroupMapper userGroupMapper;
+
     private HashMap<String,ActiveMQQueue> queueMap;
     private HashMap<String,ActiveMQTopic> topicMap;
 
@@ -270,5 +265,59 @@ public class ImSystemService {
             shopListRetVo.getShopUserIdList().add(userShop.getId());
         }
         return shopListRetVo;
+    }
+
+    @Transactional
+    public Object foundGroup(Long userId,Long shopId,String groupName){
+        User user = userService.getById(userId);
+        User shop = userService.getById(shopId);
+        if(user == null || shop == null || user.getType()!=3 || shop.getType()!=4){
+            return new Response<>().setCode(400).setMsg("未找到用户或者user对应类型不为普通用户,或者shopUser类型不为商家");
+        }
+        List<User> adminList=userService.list(new QueryWrapper<User>().eq("type",2).eq("online",1));
+        if(adminList.isEmpty()){
+            return new Response<>().setCode(503).setMsg("已经没有可分配的客服");
+        }
+        User admin=adminList.get(0);
+        admin.setType(1);
+        userService.updateById(admin);
+
+        groupService.save(new Group().setGroupName(groupName));
+        Group group = groupService.getOne(new QueryWrapper<Group>().eq("group_name",groupName));
+        userGroupService.save(new UserGroup().setGroupId(group.getId()).setUserId(userId));
+        userGroupService.save(new UserGroup().setGroupId(group.getId()).setUserId(shopId));
+        userGroupService.save(new UserGroup().setGroupId(group.getId()).setUserId(admin.getId()));
+
+        return new Response<>().setCode(0).setMsg("OK").setData(new FoundGroupRetVo().setAdminId(admin.getId())
+        .setGroupId(group.getId()).setGroupName(groupName).setShopUserId(shopId).setUserId(userId));
+    }
+
+    public Object searchUserGroup(Long userId){
+        if(userService.getById(userId) == null){
+            return new Response<>().setCode(400).setMsg("用户不存在");
+        }
+        List<UserGroup> userGroupList = userGroupMapper.selectList(new QueryWrapper<UserGroup>().eq("user_id",userId));
+        UserGroupRetVo userGroupRetVo = new UserGroupRetVo().setUserId(userId).setGroupList(new LinkedList<>());
+        for(UserGroup userGroup : userGroupList){
+            String groupName = groupService.getById(userGroup.getGroupId()).getGroupName();
+            GroupVo groupVo = new GroupVo();
+            groupVo.setGroupId(userGroup.getGroupId());
+            groupVo.setGroupName(groupName);
+            userGroupRetVo.getGroupList().add(groupVo);
+        }
+        return new Response<>().setCode(0).setMsg("OK").setData(userGroupRetVo);
+    }
+
+    public Object getGroupMember(Long groupId){
+        if(groupService.getById(groupId) == null){
+            return new Response<>().setCode(400).setMsg("群不存在");
+        }
+        List<UserGroup> userGroupList = userGroupMapper.selectList(new QueryWrapper<UserGroup>().eq("group_id",groupId));
+        GroupUserRetVo groupUserRetVo = new GroupUserRetVo().setGroupId(groupId).setUsersInfo(new LinkedList<>());
+        for(UserGroup userGroup : userGroupList){
+            groupUserRetVo.getUsersInfo().add(new UserBasicInfoVo().setUserId(userGroup.getUserId())
+            .setUserName(userService.getById(userGroup.getId()).getUsername()));
+        }
+        return new Response<>().setCode(0).setMsg("OK").setData(groupUserRetVo);
     }
 }
