@@ -91,6 +91,7 @@ public class UserController {
         User user=list.get(0);
         user.setType(1);
         userService.updateById(user);
+        //调用websocket通知这个staff,
         return new Response<>().setCode(0).setMsg("OK").setData(
                 new StaffRetVo().setType(user.getType()).setUserId(user.getId()).setUsername(user.getUsername())
         );
@@ -98,8 +99,7 @@ public class UserController {
 
     /**
      * 恢复客服的身份、以便再次利用
-     * @author summer
-     * @modify qqpet24
+     * @author summer\qqpet24
      * @param userId 用户Id,必须是已分配客服
      */
     @PutMapping("restore")

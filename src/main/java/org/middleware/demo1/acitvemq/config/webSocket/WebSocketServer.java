@@ -75,6 +75,11 @@ public class WebSocketServer {
     private static int msgNum=0;
 
     /**
+     *处理客服的标识
+     */
+    private static final String STAFF_IDENTIFY="staff allocate";
+
+    /**
      * 当webSocket连接打开时,获取所有未被消费的消息,按照格式发送到前端
      * @param session server和client之间的绘画
      * @param username client's user
@@ -117,38 +122,60 @@ public class WebSocketServer {
      */
     @OnMessage
     public void onMsg(String receiverName,@PathParam("username") String username,@PathParam("identityName") String identityName){
-        String cacheMapKey=identityName+":"+receiverName;
-        Session session;
-        if(SESSION_CACHE.containsKey(cacheMapKey)) {
-             session= SESSION_CACHE.get(cacheMapKey);
-             //当接收者有会话连接时才做事
-            log.info("从activeMq接收所有未被消费的消息");
-            //没有接收者时,只有/send生效
-            String json;
-            if(isQueue(identityName)) {
-                if (supportTopic()) {
-                    changeJmsPattern();
+        String[] split = receiverName.split(",");
+        //进入处理客服分配的逻辑
+        if(split.length==3){
+            if (split[0].equals(STAFF_IDENTIFY)){
+                String staffID=split[1];
+                String cacheMapKey="staff"+staffID;
+                Session session;
+                if (SESSION_CACHE.containsKey(cacheMapKey)) {
+                    session=SESSION_CACHE.get(cacheMapKey);
+                    session.getAsyncRemote().sendText("用户申请您的介入,用户id为:"+split[2]);
                 }
-                json = this.receiveOneMsgFromQueue(identityName);
-            }else {
-                if (!supportTopic()) {
-                    changeJmsPattern();
-                }
-                //无法从此处获取消息
-                json = this.receiveOneMsgFromTopic();
             }
-            if(json!=null){
-                session.getAsyncRemote().sendText(json);
-                msgNum++;
-                if(msgNum>=(sessionNum-1)) {
-                    SimulateListener.messageStr = null;
-                    msgNum=0;
+            //进入聊天的逻辑
+        }else {
+            String cacheMapKey=identityName+":"+receiverName;
+            Session session;
+            if(SESSION_CACHE.containsKey(cacheMapKey)) {
+                session= SESSION_CACHE.get(cacheMapKey);
+                //当接收者有会话连接时才做事
+                log.info("从activeMq接收所有未被消费的消息");
+                //没有接收者时,只有/send生效
+                String json;
+                if(isQueue(identityName)) {
+                    if (supportTopic()) {
+                        changeJmsPattern();
+                    }
+                    json = this.receiveOneMsgFromQueue(identityName);
+                }else {
+                    if (!supportTopic()) {
+                        changeJmsPattern();
+                    }
+                    //无法从此处获取消息
+                    json = this.receiveOneMsgFromTopic();
                 }
-                log.info("发送消息至客户端:"+json);
+                if(json!=null){
+                    session.getAsyncRemote().sendText(json);
+                    msgNum++;
+                    if(msgNum>=(sessionNum-1)) {
+                        SimulateListener.messageStr = null;
+                        msgNum=0;
+                    }
+                    log.info("发送消息至客户端:"+json);
+                }
             }
         }
     }
 
+
+    /**
+     * 处理客服分配
+     */
+    private void staffAllocate(){
+
+    }
     @OnClose
     public void onClose(@PathParam("username") String username,
                         @PathParam("identityName") String identityName){
