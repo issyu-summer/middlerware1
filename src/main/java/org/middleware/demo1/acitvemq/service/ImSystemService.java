@@ -262,9 +262,21 @@ public class ImSystemService {
         ShopListRetVo shopListRetVo = new ShopListRetVo();
         shopListRetVo.setShopUserIdList(new LinkedList<>());
         for(UserShop userShop : userShops){
-            shopListRetVo.getShopUserIdList().add(userShop.getId());
+            shopListRetVo.getShopUserIdList().add(userShop.getShopUserId());
         }
         return shopListRetVo;
+    }
+
+    public UserListRetVo getShopUser(Long shopId){
+        QueryWrapper<UserShop> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("shop_id",shopId);
+        List<UserShop> userShops = userShopMapper.selectList(queryWrapper);
+        UserListRetVo userListRetVo = new UserListRetVo();
+        userListRetVo.setUserList(new LinkedList<>());
+        for(UserShop userShop : userShops){
+            userListRetVo.getUserList().add(userShop.getUserId());
+        }
+        return userListRetVo;
     }
 
     @Transactional

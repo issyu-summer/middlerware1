@@ -97,6 +97,18 @@ public class ImSystemController {
 
     /**
      * @author qqpet24
+     * 查找shop对应的User
+     */
+    @GetMapping("shop/getuser")
+    public Object getUser(@RequestParam Long shopId){
+        try{
+            return new Response<>().setCode(0).setMsg("OK").setData(service.getShopUser(shopId));
+        }catch (Exception e){
+            return new Response<>().setCode(500).setMsg(e.getMessage());
+        }
+    }
+    /**
+     * @author qqpet24
      * 成立group,随机分配一个可分配的admin客服，如果没有，返回503，如果有建立群,并且拉user、shopUser、admin三个人进群
      * userId和shopId必须有效且用户类型正确，否则报400
      * admin客服被分配后,除非调用/user/restore接口,否则不能再次分配
