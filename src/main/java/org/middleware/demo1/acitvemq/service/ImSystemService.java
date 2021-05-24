@@ -260,6 +260,18 @@ public class ImSystemService {
     }
 
 
+    public UserListRetVo getShopUser(Long shopId){
+        QueryWrapper<UserShop> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("shop_id",shopId);
+        List<UserShop> userShops = userShopMapper.selectList(queryWrapper);
+        UserListRetVo userListRetVo = new UserListRetVo();
+        userListRetVo.setUserList(new LinkedList<>());
+        for(UserShop userShop : userShops){
+            userListRetVo.getUserList().add(userShop.getUserId());
+        }
+        return userListRetVo;
+    }
+
     @Transactional
     public Object foundGroup(Long userId,Long shopId,String groupName){
         User user = userService.getById(userId);
