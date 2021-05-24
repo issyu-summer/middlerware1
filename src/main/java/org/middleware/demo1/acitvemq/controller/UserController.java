@@ -6,6 +6,7 @@ import org.middleware.demo1.acitvemq.config.Response;
 import org.middleware.demo1.acitvemq.config.util.TokenUtil;
 import org.middleware.demo1.acitvemq.entity.po.Token;
 import org.middleware.demo1.acitvemq.entity.po.User;
+import org.middleware.demo1.acitvemq.entity.vo.NameVo;
 import org.middleware.demo1.acitvemq.entity.vo.StaffRetVo;
 import org.middleware.demo1.acitvemq.entity.vo.UserVo;
 import org.middleware.demo1.acitvemq.service.TokenService;
@@ -13,7 +14,9 @@ import org.middleware.demo1.acitvemq.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author summer
@@ -43,6 +46,7 @@ public class UserController {
             return new Response<>().setCode(403).setMsg("username or password not right");
         }
         if(userVo.getPassword().equals(user.getPassword())){
+            Map<String,String> map=new HashMap<>();
             String token= TokenUtil.token(user.getUsername(),user.getPassword());
             Token tmp
                     = tokenService.getOne(new QueryWrapper<Token>().eq("username", userVo.getUsername()));
@@ -52,24 +56,25 @@ public class UserController {
                 tokenService.updateById(tmp.setToken(token));
             }
             userService.updateById(user.setOnline(1));
-            return new Response<>().setCode(0).setMsg("OK").setData(token);
+            map.put("token",token);
+            map.put("id",user.getId().toString());
+            return new Response<>().setCode(0).setMsg("OK").setData(map);
         }
         return new Response<>().setCode(403).setMsg("username or password not right");
     }
 
     /**
      * 登出
-     * @param username username
      */
     @PostMapping("/logout")
-    public Object logout(@RequestParam String username){
+    public Object logout(@RequestBody UserVo userTmp){
         User user
-                = userService.getOne(new QueryWrapper<User>().eq("username",username));
-        if(user.getType()==1){
-            user.setType(2);
-        }
+                = userService.getOne(new QueryWrapper<User>().eq("username",userTmp.getUsername()));
+//        if(user.getType()==1){
+//            user.setType(2);
+//        }
         userService.updateById(user.setOnline(0));
-        if(tokenService.remove(new QueryWrapper<Token>().eq("username", username))){
+        if(tokenService.remove(new QueryWrapper<Token>().eq("username", userTmp.getUsername()))){
             return new Response<>().setCode(0).setMsg("OK");
         }
         return new Response<>().setCode(500).setMsg("server internal error");
@@ -116,5 +121,6 @@ public class UserController {
         userService.updateById(user); //改动了设置online为0的地方客服重新分配不代表不在线
         return new Response<>().setCode(0).setMsg("OK");
     }
+
 
 }

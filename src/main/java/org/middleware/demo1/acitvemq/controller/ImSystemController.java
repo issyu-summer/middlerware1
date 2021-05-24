@@ -3,25 +3,25 @@ package org.middleware.demo1.acitvemq.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.middleware.demo1.acitvemq.config.Response;
-import org.middleware.demo1.acitvemq.config.content.Content;
-import org.middleware.demo1.acitvemq.config.content.Msg;
-import org.middleware.demo1.acitvemq.config.content.User;
-import org.middleware.demo1.acitvemq.entity.vo.FriendListRetVo;
-import org.middleware.demo1.acitvemq.entity.vo.GroupVo;
+import org.middleware.demo1.acitvemq.entity.po.Group;
+import org.middleware.demo1.acitvemq.entity.po.User;
+import org.middleware.demo1.acitvemq.entity.po.UserGroup;
+import org.middleware.demo1.acitvemq.entity.vo.GroupRetVo;
+import org.middleware.demo1.acitvemq.service.GroupService;
 import org.middleware.demo1.acitvemq.service.ImSystemService;
+import org.middleware.demo1.acitvemq.service.UserGroupService;
+import org.middleware.demo1.acitvemq.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.servlet.http.HttpServletRequest;
-import javax.websocket.server.PathParam;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-
-import static org.middleware.demo1.acitvemq.config.content.Content.*;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author summer
@@ -125,6 +125,8 @@ public class ImSystemController {
         }
     }
 
+    @Autowired
+    private UserService userService;
     /**
      * @author qqpet24
      * 查找group对应的members,groupId必须存在,否则报400
@@ -132,11 +134,50 @@ public class ImSystemController {
     @GetMapping("group/members")
     public Object getGroupMember(@RequestParam Long groupId){
         try{
-            return service.getGroupMember(groupId);
+            List<UserGroup> group = userGroupService.list(new QueryWrapper<UserGroup>().eq("group_id",groupId));
+            List<Integer> collect = group.stream().mapToInt(e -> Math.toIntExact(e.getUserId())).boxed().collect(Collectors.toList());
+            return new Response<>().setCode(0).setMsg("OK").setData(userService.list(new QueryWrapper<User>().in("id", collect)));
         }catch (Exception e){
             return new Response<>().setCode(500).setMsg(e.getMessage());
         }
     }
+
+    @GetMapping("/user")
+    public Object getUser(@RequestParam Long userId){
+        List<UserGroup> userGroup = userGroupService.list(new QueryWrapper<UserGroup>().eq("user_id", userId));
+        if(userGroup==null){
+            return new Response<>().setCode(500).setMsg("server internal error");
+        }
+        List<Integer> collect1 = userGroup.stream().mapToInt(e -> Math.toIntExact(e.getGroupId())).boxed().collect(Collectors.toList());
+        List<UserGroup> groups= userGroupService.list(new QueryWrapper<UserGroup>().in("group_id", collect1));
+        List<Long> collect = groups.stream().mapToLong(e -> Math.toIntExact(e.getGroupId())).boxed().collect(Collectors.toList());
+        List<GroupRetVo> list = new LinkedList<>();
+        for (Long id:collect) {
+            GroupRetVo groupRetVo = new GroupRetVo().setGroupId(id).setUsers(userService.list(new QueryWrapper<User>().in("id",
+                    userGroupService.list(new QueryWrapper<UserGroup>().eq("group_id", id))
+                            .stream().mapToInt(e -> Math.toIntExact(e.getUserId())).boxed().collect(Collectors.toList()))));
+            list.add(groupRetVo);
+        }
+        return new Response<>().setCode(0).setMsg("OK").setData(list);
+    }
+    @Autowired
+    private GroupService groupService;
+    @Autowired
+    private UserGroupService userGroupService;
+    @GetMapping("group")
+    public Object group(@RequestParam Long userId,@RequestParam Long shopId){
+        Group group = new Group().setGroupName("test-group");
+        boolean save = groupService.save(group);
+        Long groupId=group.getId();
+        UserGroup user = new UserGroup().setUserId(userId).setGroupId(groupId);
+        UserGroup shop = new UserGroup().setUserId(shopId).setGroupId(groupId);
+        if(save){
+            userGroupService.save(user);
+            userGroupService.save(shop);
+        }
+        return new Response<>().setCode(0).setMsg("OK").setData(group);
+    }
+
 
     /**
      * 发送聊天接口

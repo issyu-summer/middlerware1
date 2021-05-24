@@ -28,4 +28,6 @@ public class User {
     private Integer type;
     @TableField("online")
     private Integer online;
+    @TableField("img")
+    private String img;
 }

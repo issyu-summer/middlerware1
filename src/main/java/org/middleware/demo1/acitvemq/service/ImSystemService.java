@@ -29,6 +29,7 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author summer
@@ -53,9 +54,6 @@ public class ImSystemService {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private UserMapper userMapper;
 
     @Autowired
     private UserShopService userShopService;
@@ -246,26 +244,21 @@ public class ImSystemService {
     public ShopListRetVo getAllShop(){
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("type",4);
-        List<User> users = userMapper.selectList(queryWrapper);
+        List<User> users = userService.list(queryWrapper);
         ShopListRetVo shopListRetVo = new ShopListRetVo();
-        shopListRetVo.setShopUserIdList(new LinkedList<>());
-        for(User user : users){
-            shopListRetVo.getShopUserIdList().add(user.getId());
-        }
+        shopListRetVo.setShopUserIdList(users);
         return shopListRetVo;
     }
 
-    public ShopListRetVo getUserShop(Long userId){
+    public Object getUserShop(Long userId){
         QueryWrapper<UserShop> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id",userId);
         List<UserShop> userShops = userShopMapper.selectList(queryWrapper);
-        ShopListRetVo shopListRetVo = new ShopListRetVo();
-        shopListRetVo.setShopUserIdList(new LinkedList<>());
-        for(UserShop userShop : userShops){
-            shopListRetVo.getShopUserIdList().add(userShop.getId());
-        }
-        return shopListRetVo;
+        List<Integer> collect = userShops.stream().mapToInt(e -> Math.toIntExact(e.getShopUserId())).boxed().collect(Collectors.toList());
+        List<User> list = userService.list(new QueryWrapper<User>().in("id", collect));
+        return list;
     }
+
 
     @Transactional
     public Object foundGroup(Long userId,Long shopId,String groupName){
