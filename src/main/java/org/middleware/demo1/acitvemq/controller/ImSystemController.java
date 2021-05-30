@@ -155,7 +155,7 @@ public class ImSystemController {
     }
 
     @GetMapping("/user")
-    public Object getUser(@RequestParam Long userId){
+    public Object getUser1(@RequestParam Long userId){
         List<UserGroup> userGroup = userGroupService.list(new QueryWrapper<UserGroup>().eq("user_id", userId));
         if(userGroup==null){
             return new Response<>().setCode(500).setMsg("server internal error");

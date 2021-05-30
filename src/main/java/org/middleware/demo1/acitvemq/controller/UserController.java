@@ -58,6 +58,7 @@ public class UserController {
             userService.updateById(user.setOnline(1));
             map.put("token",token);
             map.put("id",user.getId().toString());
+            map.put("type",user.getType().toString());
             return new Response<>().setCode(0).setMsg("OK").setData(map);
         }
         return new Response<>().setCode(403).setMsg("username or password not right");
