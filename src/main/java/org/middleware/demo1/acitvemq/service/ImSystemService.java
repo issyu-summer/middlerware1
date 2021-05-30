@@ -160,7 +160,9 @@ public class ImSystemService {
 
     public RecordListRetVo getRecord(Integer nums, Integer orders, Integer type,Integer contentType,Long senderId,Long receiverId){
         QueryWrapper<Record> queryWrapper= new QueryWrapper<>();
-        queryWrapper.eq("sender_id",senderId);
+        if(type!=1){
+            queryWrapper.eq("sender_id",senderId);
+        }
         queryWrapper.eq("receiver_id",receiverId);
         queryWrapper.eq("type",type);
         if(contentType!=null){

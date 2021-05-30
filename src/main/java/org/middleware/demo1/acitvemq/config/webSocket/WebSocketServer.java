@@ -77,7 +77,7 @@ public class WebSocketServer {
     /**
      *处理客服的标识
      */
-    private static final String STAFF_IDENTIFY="staff allocate";
+    private static final String STAFF_IDENTIFY="staff_allocate";
 
     /**
      * 当webSocket连接打开时,获取所有未被消费的消息,按照格式发送到前端
@@ -122,16 +122,28 @@ public class WebSocketServer {
      */
     @OnMessage
     public void onMsg(String receiverName,@PathParam("username") String username,@PathParam("identityName") String identityName){
+        System.out.println(receiverName);
         String[] split = receiverName.split(",");
         //进入处理客服分配的逻辑
+        if(split.length==2){
+            String staffID=split[1];
+            String cacheMapKey=identityName+":"+staffID;
+            Session session;
+            if (SESSION_CACHE.containsKey(cacheMapKey)) {
+                session=SESSION_CACHE.get(cacheMapKey);
+                //
+                session.getAsyncRemote().sendText("{\"groupId\":-1}");
+            }
+        }
         if(split.length==3){
             if (split[0].equals(STAFF_IDENTIFY)){
                 String staffID=split[1];
-                String cacheMapKey="staff"+staffID;
+                String cacheMapKey=identityName+":"+staffID;
                 Session session;
                 if (SESSION_CACHE.containsKey(cacheMapKey)) {
                     session=SESSION_CACHE.get(cacheMapKey);
-                    session.getAsyncRemote().sendText("用户申请您的介入,用户id为:"+split[2]);
+                    //
+                    session.getAsyncRemote().sendText("{\"groupId\":"+split[2]+"}");
                 }
             }
             //进入聊天的逻辑

@@ -6,10 +6,13 @@ import org.middleware.demo1.acitvemq.config.Response;
 import org.middleware.demo1.acitvemq.config.util.TokenUtil;
 import org.middleware.demo1.acitvemq.entity.po.Token;
 import org.middleware.demo1.acitvemq.entity.po.User;
+import org.middleware.demo1.acitvemq.entity.po.UserGroup;
 import org.middleware.demo1.acitvemq.entity.vo.NameVo;
 import org.middleware.demo1.acitvemq.entity.vo.StaffRetVo;
+import org.middleware.demo1.acitvemq.entity.vo.UserIdVo;
 import org.middleware.demo1.acitvemq.entity.vo.UserVo;
 import org.middleware.demo1.acitvemq.service.TokenService;
+import org.middleware.demo1.acitvemq.service.UserGroupService;
 import org.middleware.demo1.acitvemq.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +36,8 @@ public class UserController {
     @Autowired
     private TokenService tokenService;
 
-
+    @Autowired
+    private UserGroupService userGroupService;
     /**
      * 登陆
      * @param userVo user info
@@ -85,8 +89,8 @@ public class UserController {
      * 分配一个客服
      * @return staff info
      */
-    @PostMapping("/allocate/staff")
-    public Object allocate(){
+    @GetMapping("/allocate/staff")
+    public Object allocate(@RequestParam Long groupId){
         List<User> list=userService.list(new QueryWrapper<User>().eq("type",2).eq("online",1));
         if(list.isEmpty()){
             User user=userService.getById(0);
@@ -97,6 +101,7 @@ public class UserController {
         User user=list.get(0);
         user.setType(1);
         userService.updateById(user);
+        userGroupService.save(new UserGroup().setUserId(user.getId()).setGroupId(groupId));
         //调用websocket通知这个staff,
         return new Response<>().setCode(0).setMsg("OK").setData(
                 new StaffRetVo().setType(user.getType()).setUserId(user.getId()).setUsername(user.getUsername())
@@ -109,9 +114,11 @@ public class UserController {
      * @param userId 用户Id,必须是已分配客服
      */
     @PutMapping("restore")
-    public Object restore(@RequestParam Long userId){
+    public Object restore(@RequestBody UserIdVo userId){
+        Long id=userId.getId();
+        Long groupId = userId.getGroupId();
         User user
-                = userService.getOne(new QueryWrapper<User>().eq("id",userId));
+                = userService.getOne(new QueryWrapper<User>().eq("id",id));
         if(user == null){
             return new Response<>().setCode(400).setMsg("该用户不存在");
         }
@@ -119,6 +126,7 @@ public class UserController {
             return new Response<>().setCode(400).setMsg("该用户不是客服或者该客服空闲");
         }
         user.setType(2);
+        userGroupService.remove(new QueryWrapper<UserGroup>().eq("user_id",id).eq("group_id",groupId));
         userService.updateById(user); //改动了设置online为0的地方客服重新分配不代表不在线
         return new Response<>().setCode(0).setMsg("OK");
     }
