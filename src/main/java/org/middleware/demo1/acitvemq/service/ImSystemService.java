@@ -168,24 +168,19 @@ public class ImSystemService {
         if(contentType!=null){
             queryWrapper.eq("content_type",contentType);
         }
-        if(nums != null && orders == null){
-            queryWrapper.last("limit "+nums.toString());
-        }else if(nums == null && orders != null){
-            queryWrapper.last("limit "+orders.toString()+","+"-1");
-        }else if(nums !=null && orders != null){
-            queryWrapper.last("limit "+orders.toString()+","+nums.toString());
-        }
+//        if(nums != null && orders == null){
+//            queryWrapper.last("limit "+nums.toString());
+//        }else if(nums == null && orders != null){
+//            queryWrapper.last("limit "+orders.toString()+","+"-1");
+//        }else if(nums !=null && orders != null){
+//            queryWrapper.last("limit "+orders.toString()+","+nums.toString());
+//        }
 
         List<Record> records = recordMapper.selectList(queryWrapper);
         RecordListRetVo recordListRetVo = new RecordListRetVo();
-        recordListRetVo.setMsgs(new LinkedList<>()).setOrders(orders).setNums(nums).setReceiverId(receiverId).setSenderId(senderId)
+        recordListRetVo.setMsgs(records).setOrders(orders).setNums(nums).setReceiverId(receiverId).setSenderId(senderId)
         .setContentType(contentType).setType(type);
 
-        Integer tmpOrder = 0;
-        for(Record record : records){
-            recordListRetVo.getMsgs().add(new Msg().setOrder(tmpOrder++).setSenderId(record.getSenderId()).setReceiverId(record.getReceiverId())
-            .setContent(record.getContent()).setType(record.getType()).setContentType(record.getContentType()).setDateTime(record.getDateTime().toString()).setId(record.getId()));
-        }
         return recordListRetVo;
     }
 
@@ -315,16 +310,4 @@ public class ImSystemService {
         return new Response<>().setCode(0).setMsg("OK").setData(userGroupRetVo);
     }
 
-    public Object getGroupMember(Long groupId){
-        if(groupService.getById(groupId) == null){
-            return new Response<>().setCode(400).setMsg("群不存在");
-        }
-        List<UserGroup> userGroupList = userGroupMapper.selectList(new QueryWrapper<UserGroup>().eq("group_id",groupId));
-        GroupUserRetVo groupUserRetVo = new GroupUserRetVo().setGroupId(groupId).setUsersInfo(new LinkedList<>());
-        for(UserGroup userGroup : userGroupList){
-            groupUserRetVo.getUsersInfo().add(new UserBasicInfoVo().setUserId(userGroup.getUserId())
-            .setUserName(userService.getById(userGroup.getId()).getUsername()));
-        }
-        return new Response<>().setCode(0).setMsg("OK").setData(groupUserRetVo);
-    }
 }

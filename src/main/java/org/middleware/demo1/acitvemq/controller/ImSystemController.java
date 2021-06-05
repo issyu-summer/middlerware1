@@ -1,16 +1,15 @@
 package org.middleware.demo1.acitvemq.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import net.sf.jsqlparser.expression.DateTimeLiteralExpression;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.middleware.demo1.acitvemq.config.Response;
 import org.middleware.demo1.acitvemq.entity.po.Group;
+import org.middleware.demo1.acitvemq.entity.po.Record;
 import org.middleware.demo1.acitvemq.entity.po.User;
 import org.middleware.demo1.acitvemq.entity.po.UserGroup;
 import org.middleware.demo1.acitvemq.entity.vo.GroupRetVo;
-import org.middleware.demo1.acitvemq.service.GroupService;
-import org.middleware.demo1.acitvemq.service.ImSystemService;
-import org.middleware.demo1.acitvemq.service.UserGroupService;
-import org.middleware.demo1.acitvemq.service.UserService;
+import org.middleware.demo1.acitvemq.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.jms.Queue;
 import javax.servlet.http.HttpServletRequest;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -100,7 +97,7 @@ public class ImSystemController {
      * 查找shop对应的User
      */
     @GetMapping("shop/getuser")
-    public Object getUser(@RequestParam Long shopId){
+    public Object getUsers(@RequestParam Long shopId){
         try{
             return new Response<>().setCode(0).setMsg("OK").setData(service.getShopUser(shopId));
         }catch (Exception e){
@@ -178,7 +175,8 @@ public class ImSystemController {
     private UserGroupService userGroupService;
     @GetMapping("group")
     public Object group(@RequestParam Long userId,@RequestParam Long shopId){
-        Group group = new Group().setGroupName("test-group");
+        String uuid = UUID.randomUUID().toString();
+        Group group = new Group().setGroupName("test-group"+uuid);
         boolean save = groupService.save(group);
         Long groupId=group.getId();
         UserGroup user = new UserGroup().setUserId(userId).setGroupId(groupId);
@@ -190,7 +188,17 @@ public class ImSystemController {
         return new Response<>().setCode(0).setMsg("OK").setData(group);
     }
 
+    @DeleteMapping("/group/del")
+    public Object groupDelete(@RequestParam Long groupId){
+        Group group = new Group().setGroupName("test-group"+ UUID.randomUUID());
+        boolean b1 = userGroupService.remove(new QueryWrapper<UserGroup>().eq("group_id", groupId));
+        boolean b = groupService.removeById(groupId);
+        return new Response<>().setCode(0).setMsg("OK").setData(b&&b1);
+    }
 
+
+    @Autowired
+    private RecordService recordService;
     /**
      * 发送聊天接口
      * @modify qqpet24
@@ -208,6 +216,7 @@ public class ImSystemController {
                        @RequestParam Integer type,
                        @RequestParam Integer contentType){
         try{
+//            recordService.save(new Record().setContent(msg).setContentType(contentType).setType(type).setSenderId(senderId).setReceiverId(receiverId));
             if(type == 0 && (contentType == 0 || contentType == 1 )){
                 return new Response<>().setCode(0).setMsg("OK").setData(service.sendToSomebody(msg, senderId, receiverId, contentType));
             }else if(type == 1 && (contentType == 0 || contentType == 1 )){
@@ -288,6 +297,5 @@ public class ImSystemController {
             return new Response<>().setCode(0).setData("成功").setData(result);
         }
     }
-
     //发送文件和存储转发的流程：A调用/fileSave--->/send----->B收到了消息------->/downLoad
 }

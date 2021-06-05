@@ -1,5 +1,6 @@
 package org.middleware.demo1.acitvemq.config.webSocket;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,11 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.middleware.demo1.acitvemq.entity.po.User;
+import org.middleware.demo1.acitvemq.entity.po.UserGroup;
+import org.middleware.demo1.acitvemq.service.UserGroupService;
+import org.middleware.demo1.acitvemq.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
@@ -19,6 +25,7 @@ import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * ws://localhost:8080/websocket/{username}/{identityName}
@@ -55,6 +62,12 @@ public class WebSocketServer {
      */
     private JmsMessagingTemplate jmsMessagingTemplate=
             ApplicationContextUtil.getApplicationContext().getBean("jmsMessagingTemplate",JmsMessagingTemplate.class);
+
+    private UserGroupService userGroupService =
+            ApplicationContextUtil.getApplicationContext().getBean(UserGroupService.class);
+
+    private UserService userService=
+            ApplicationContextUtil.getApplicationContext().getBean(UserService.class);
 
     /**
      * 会话缓存池
@@ -114,6 +127,7 @@ public class WebSocketServer {
         }
     }
 
+
     /**
      * 必须传输一个String msg作为载荷,否则会报no payload的异常
      * @param receiverName 接收者
@@ -130,19 +144,29 @@ public class WebSocketServer {
             String cacheMapKey=identityName+":"+staffID;
             Session session;
             if (SESSION_CACHE.containsKey(cacheMapKey)) {
-                session=SESSION_CACHE.get(cacheMapKey);
-                //
+                session=SESSION_CACHE.get(cacheMapKey);                //
                 session.getAsyncRemote().sendText("{\"groupId\":-1}");
             }
         }
         if(split.length==3){
             if (split[0].equals(STAFF_IDENTIFY)){
                 String staffID=split[1];
+                /* *********以下********* */
+                Long groupId = Long.valueOf(split[2]);
+                List<UserGroup> userGroups = userGroupService.list(new QueryWrapper<UserGroup>().eq("group_id", groupId));
+                List<Long> ids = userGroups.stream().mapToLong(UserGroup::getUserId).boxed().collect(Collectors.toList());
+                List<User> list = userService.list(new QueryWrapper<User>().in("id", ids).eq("type", 4));
+//                Long id = list.get(0).getId();
+                /* *********以上********* */
                 String cacheMapKey=identityName+":"+staffID;
                 Session session;
                 if (SESSION_CACHE.containsKey(cacheMapKey)) {
                     session=SESSION_CACHE.get(cacheMapKey);
-                    //
+                    session.getAsyncRemote().sendText("{\"groupId\":"+split[2]+"}");
+                }
+                cacheMapKey=identityName+":"+4;
+                if(SESSION_CACHE.containsKey(cacheMapKey)){
+                    session=SESSION_CACHE.get(cacheMapKey);
                     session.getAsyncRemote().sendText("{\"groupId\":"+split[2]+"}");
                 }
             }

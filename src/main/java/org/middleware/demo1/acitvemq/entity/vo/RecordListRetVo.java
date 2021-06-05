@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.middleware.demo1.acitvemq.config.content.Msg;
 import org.middleware.demo1.acitvemq.config.content.User;
+import org.middleware.demo1.acitvemq.entity.po.Record;
 
 import java.util.List;
 
@@ -30,5 +31,5 @@ public class RecordListRetVo {
 
     private Integer orders;
 
-    private List<Msg> msgs;
+    private List<Record> msgs;
 }
